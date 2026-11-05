@@ -314,7 +314,7 @@ function defaultSettings(curKey){return{
   horaires:[
     {id:"m1",label:"",team:"Matin",start:300,end:795,pause:0,theo:420,fri:null},
     {id:"m2",label:"",team:"Matin",start:360,end:795,pause:0,theo:420,fri:null},
-    {id:"m3",label:"",team:"Matin",start:330,end:780,pause:0,theo:420,fri:{start:330,end:720,pause:0,theo:420}},
+    {id:"m3",label:"",team:"Matin",start:330,end:750,pause:0,theo:420,fri:null},
     {id:"s2",label:"",team:"Soir",start:730,end:1165,pause:0,theo:435,fri:{start:720,end:1080,pause:0,theo:360}},
     {id:"s3",label:"",team:"Soir",start:765,end:1215,pause:0,theo:420,fri:null},
     {id:"j",label:"",team:"Journée",start:420,end:930,pause:60,theo:450,fri:{start:420,end:720,pause:0,theo:300}}
@@ -354,13 +354,14 @@ function dayCalc(d,idx,st){
   d=d||{};var x=d.x||{};EXTRAS.forEach(function(e){r.x[e[0]]=+x[e[0]]||0});
   if(isWork(d)){
     r.team=d.team||"";r.label=d.type==="perso"?"Perso":(d.label||"");
-    r.recupH=+x.recupH||0;r.congeH=+x.congeH||0;
+    r.recupP=+x.recupH||0;r.congeP=+x.congeH||0;
     r.worked=Math.max(0,span(d.start,d.end)-(+d.pause||0)-r.x.greve);
     r.night=nightMin(d.start,d.end,R);
-    r.counted=r.worked+r.recupH+r.congeH;
     r.panier=(r.team==="Matin"||r.team==="Soir")&&r.worked>=R.panierMin?1:0;
     if(d.theo!=null)r.theo=+d.theo;else{var sc=/^sch:/.test(d.type)?schedFor(st,d.type.slice(4),idx):null;r.theo=sc?sc.theo:420}
     if(idx>=5)r.theo=0;
+    var gap=Math.max(0,r.theo-r.worked);r.recupH=Math.min(r.recupP,gap);gap-=r.recupH;r.congeH=Math.min(r.congeP,gap);
+    r.counted=r.worked+r.recupH+r.congeH;
     r.hsJour=Math.max(0,r.counted-r.theo);
     if(idx===5){r.samedi=r.worked;r.counted=0;r.hsJour=0;if(r.worked>=R.panierMin){r.panier=1;r.sam=1}}
     r.alerte=r.worked>R.maxJour;
@@ -381,10 +382,12 @@ function weekCalc(w,st){
     if(c.abs==="conge")t.conge+=c.counted;if(c.abs==="maladie")t.maladie+=c.counted;if(c.abs==="ferie")t.ferie+=c.counted;if(c.abs==="absence")t.absence++;
     t.greve+=c.greveJour+c.x.greve;t.formation+=c.formJour;}
   t.conge+=t.congeH;
-  if(R.hsCalc!=="jour"){var cum=0;t.hs=0;for(i=0;i<7;i++){var dc=t.days[i];if(i===5){t.hsDay.push(0);continue}
-      var before=cum;cum+=dc.counted;var h=Math.max(0,cum-Math.max(before,R.seuil));h=Math.min(h,dc.counted);t.hsDay.push(dc.abs?0:h);t.hs+=dc.abs?0:h}
-    if(t.hs<Math.max(0,t.counted-R.seuil)){var miss=Math.max(0,t.counted-R.seuil)-t.hs;for(i=6;i>=0&&miss>0;i--){if(i===5||!isWork(days[i]||{}))continue;t.hsDay[i]+=miss;t.hs+=miss;miss=0}}}
-  else{t.hs=0;for(i=0;i<7;i++){t.hsDay.push(i===5?0:t.days[i].hsJour);if(i!==5)t.hs+=t.days[i].hsJour}}
+  t.hs=0;for(i=0;i<7;i++)if(i!==5)t.hs+=t.days[i].hsJour;
+  if(R.hsCalc!=="jour")t.hs=Math.max(0,t.counted-R.seuil);
+  var hd=t.days.map(function(x,k){return k===5||!isWork(days[k]||{})?0:x.hsJour}),sm=hd.reduce(function(a,b){return a+b},0);
+  if(sm>t.hs){var ex=sm-t.hs;for(i=6;i>=0&&ex>0;i--){var rr=Math.min(hd[i],ex);hd[i]-=rr;ex-=rr}}
+  else if(sm<t.hs){for(i=6;i>=0;i--)if(i!==5&&isWork(days[i]||{})){hd[i]+=t.hs-sm;break}}
+  t.hsDay=hd;
   t.hs1=Math.min(t.hs,R.palier);t.hs2=t.hs-t.hs1;
   t.majHs=t.hs1*R.taux1/100+t.hs2*R.taux2/100;
   t.majNuit=t.night*R.nuit/100;
@@ -412,8 +415,8 @@ if(typeof module!=="undefined")module.exports={feries:feries,ferieOf:ferieOf,con
 
 <script>
 /* ===== Application ===== */
-var VERSION="1.4";
-var CHANGELOG=[["1.4","05/11/2026",["Synchronisation iPhone ↔ PC par ton Google Sheet, protégée par un code d'accès","Fiche envoyée en image, à l'identique de la fiche papier, avec observations automatiques","Absences : « Heures à récupérer » et « Congé payé », heures partielles dans la journée et durée modifiable","Note par semaine, bouton « Poser la semaine en congé payé » et appui long dans la vue année","Prochaines échéances dans Compteur, avec ajout au Calendrier de l'iPhone","Vue année : congés en bleu, notes et formations en violet, centrée sur PC","Cases d'heure plus larges sur PC, Matin 3 jusqu'à 12:00 le vendredi","Choix du calcul des heures sup : jour par jour ou à la semaine"]],["1.3","05/11/2026",["Nouvel écran Semaine sur fond de fiche papier : horaire, arrivée et fin modifiables directement","Grande grille complète sur PC, comme la fenêtre de saisie de l'ancien fichier","Vue année pour aller à n'importe quelle semaine, avec l'état de chaque semaine","Glisser le doigt à gauche ou à droite pour changer de semaine","Réglages rangés comme sur iPhone, avec bouton pour rétablir les valeurs des accords","Corrections du compteur et des congés repliées"]],["1.2","05/11/2026",["Thème automatique, clair ou sombre dans Réglages","Jours fériés préremplis (les fériés du week-end sont affichés pour information)","Fiche au format de l'ancien fichier, copiée dans le corps du mail et ouverture d'Outlook avec destinataires et objet","Heures sup affichées jour par jour sur la fiche (total calculé sur la semaine) et horaire théorique par horaire","Gestionnaire de sauvegardes : liste, restauration, export, sauvegarde automatique","Boutons de remplissage raccourcis (Matin 1, Soir 2…)"]],["1.1","04/11/2026",["Samedi selon l'accord maintenance : heures hors seuil de 35 h, toutes à récupérer avec 50 % de majoration","Samedi : primes panier, équipe et indemnité 3006 ajoutées dès 6 h de travail","Alertes au-delà de 10 h par jour et 40 h par semaine","Compteur de congés payés (heures et jours maison) avec correction du solde","Nouveau type de journée : Jour maison"]],["1.0","04/11/2026",["Première version autonome : saisie de la semaine, heures sup, heures de nuit, primes panier et équipe","Compteur de récupération avec correction du solde","Fiche Excel envoyée par le menu de partage (Mail)","Sauvegarde et import des données, fonctionne hors connexion"]]];
+var VERSION="0.5";
+var CHANGELOG=[["0.5","05/11/2026",["Correctif : heures sup affichées jour par jour sur la fiche, case des heures à récupérer de la semaine, récup posée décomptée seulement si elle complète la journée, Matin 3 en 5h30 – 12h30 (accord), bouton Copier retiré","Synchronisation iPhone ↔ PC par ton Google Sheet, protégée par un code d'accès","Fiche envoyée en image, à l'identique de la fiche papier, avec observations automatiques","Absences : « Heures à récupérer » et « Congé payé », heures partielles dans la journée et durée modifiable","Note par semaine, bouton « Poser la semaine en congé payé » et appui long dans la vue année","Prochaines échéances dans Compteur, avec ajout au Calendrier de l'iPhone","Vue année : congés en bleu, notes et formations en violet, centrée sur PC","Cases d'heure plus larges sur PC, Matin 3 jusqu'à 12:00 le vendredi","Choix du calcul des heures sup : jour par jour ou à la semaine"]],["0.4","05/11/2026",["Nouvel écran Semaine sur fond de fiche papier : horaire, arrivée et fin modifiables directement","Grande grille complète sur PC, comme la fenêtre de saisie de l'ancien fichier","Vue année pour aller à n'importe quelle semaine, avec l'état de chaque semaine","Glisser le doigt à gauche ou à droite pour changer de semaine","Réglages rangés comme sur iPhone, avec bouton pour rétablir les valeurs des accords","Corrections du compteur et des congés repliées"]],["0.3","05/11/2026",["Thème automatique, clair ou sombre dans Réglages","Jours fériés préremplis (les fériés du week-end sont affichés pour information)","Fiche au format de l'ancien fichier, copiée dans le corps du mail et ouverture d'Outlook avec destinataires et objet","Heures sup affichées jour par jour sur la fiche (total calculé sur la semaine) et horaire théorique par horaire","Gestionnaire de sauvegardes : liste, restauration, export, sauvegarde automatique","Boutons de remplissage raccourcis (Matin 1, Soir 2…)"]],["0.2","04/11/2026",["Samedi selon l'accord maintenance : heures hors seuil de 35 h, toutes à récupérer avec 50 % de majoration","Samedi : primes panier, équipe et indemnité 3006 ajoutées dès 6 h de travail","Alertes au-delà de 10 h par jour et 40 h par semaine","Compteur de congés payés (heures et jours maison) avec correction du solde","Nouveau type de journée : Jour maison"]],["0.1","04/11/2026",["Première version autonome : saisie de la semaine, heures sup, heures de nuit, primes panier et équipe","Compteur de récupération avec correction du solde","Fiche Excel envoyée par le menu de partage (Mail)","Sauvegarde et import des données, fonctionne hors connexion"]]];
 var TODAY=new Date();
 var S={settings:defaultSettings(keyOf(mondayOf(TODAY))),weeks:{},cur:keyOf(mondayOf(TODAY)),tab:"week",sheet:null,db:null,ready:false,offline:false,lastExport:null,toast:null};
 var app=document.getElementById("app");
@@ -453,7 +456,8 @@ function migrate14b(){if(S.settings.mig14b)return;var names={m1:"Matin 1",m2:"Ma
   (S.settings.horaires||[]).forEach(function(h){if(names[h.id]&&h.label===names[h.id])h.label=""});
   Object.keys(S.weeks).forEach(function(k){(S.weeks[k].days||[]).forEach(function(d){if(d&&/^sch:/.test(d.type||"")&&names[d.type.slice(4)]===d.label)d.label=""})});
   S.settings.regles.hsCalc="semaine";S.settings.mig14b=true}
-function migrate14(){migrate14b();if(S.settings.mig14)return;(S.settings.horaires||[]).forEach(function(h){if(h.id==="m3"&&!h.fri&&h.end===780)h.fri={start:330,end:720,pause:0,theo:420}});S.settings.mig14=true}
+function migrate15(){if(S.settings.mig15)return;(S.settings.horaires||[]).forEach(function(h){if(h.id==="m3"&&h.start===330&&h.end===780){h.end=750;h.fri=null}});S.settings.mig15=true}
+function migrate14(){migrate14b();migrate15();if(S.settings.mig14)return;(S.settings.horaires||[]).forEach(function(h){if(h.id==="m3"&&!h.fri&&h.end===780)h.fri={start:330,end:720,pause:0,theo:420}});S.settings.mig14=true}
 function applyTheme(){var th=S.settings.theme,r=document.documentElement;if(th==="light"||th==="dark")r.setAttribute("data-theme",th);else r.removeAttribute("data-theme")}
 function loadLocal(){try{var raw=localStorage.getItem(KEY);if(raw)applyData(JSON.parse(raw))}catch(e){S.readErr=true}}
 
@@ -504,7 +508,7 @@ function viewWeek(){
   if(w.validated)out+='<div class="banner ok"><span>Envoyée'+(w.sentAt?' le '+esc(w.sentAt):'')+'. Semaine verrouillée.</span><button class="btn small" data-act="reopen">Modifier</button></div>';
   else{out+='<div class="quick" aria-label="Remplir lundi à vendredi"><span class="qlbl">Remplir :</span>';
     st.horaires.forEach(function(h){out+='<button class="qbtn" data-act="fill" data-id="'+h.id+'">'+esc(schedName(h))+'</button>'});
-    out+='<button class="qbtn" data-act="copyprev">Copier S'+(+shiftKey(S.cur,-1).slice(6))+'</button><button class="qbtn" data-act="clear">Vider</button></div>'}
+    out+='<button class="qbtn" data-act="clear">Vider</button></div>'}
   out+='<label class="wnote"><span>Note</span><input type="text" data-act="wnote" placeholder="Ex. Vacances, Formation soudure…" value="'+esc(w.note||"")+'"'+lock+'></label>';
   if(c.alertSem||c.alertJours)out+='<div class="banner warn">'+(c.alertSem?'Semaine à '+hm(c.worked)+' : au-delà du maximum de '+hm(st.regles.maxSem)+'. ':'')+(c.alertJours?c.alertJours+' jour(s) au-delà de '+hm(st.regles.maxJour)+'.':'')+'</div>';
   var ph='',pc='';
@@ -514,7 +518,7 @@ function viewWeek(){
     var tin=function(k){return'<input type="time" class="tin'+(isChanged(d,i,k)?' chg':'')+'" data-act="dset" data-i="'+i+'" data-k="'+k+'" value="'+toTime(d[k])+'" aria-label="'+(k==="start"?"Arrivée":"Fin")+' '+DAYL[i]+'"'+lock+'>'};
     var pause=wk?'<label><input type="checkbox" data-act="dpause" data-i="'+i+'"'+(+d.pause?' checked':'')+lock+'> Pause'+(+d.pause?' '+hm(+d.pause):'')+'</label>':'';
     var notes=[];if(fn)notes.push(fn+(i>4?' (information)':'')+(fn==="Lundi de Pentecôte"?' — à vérifier':''));if(dc.alerte)notes.push('plus de '+hm(st.regles.maxJour)+' !');
-    EXTRAS.forEach(function(e){if(dc.x[e[0]])notes.push(e[1]+' '+hm(dc.x[e[0]]))});if(dc.recupH)notes.push('+ '+hm(dc.recupH)+' d\'heures à récupérer');if(dc.congeH)notes.push('+ '+hm(dc.congeH)+' de congé payé');if(i===5&&dc.samedi)notes.push('samedi +'+st.regles.samTaux+' %');
+    EXTRAS.forEach(function(e){if(dc.x[e[0]])notes.push(e[1]+' '+hm(dc.x[e[0]]))});if(dc.recupP)notes.push('récup posée '+hm(dc.recupP)+(dc.recupH<dc.recupP?(dc.recupH?' · décomptée '+hm(dc.recupH):' · non décomptée (journée déjà complète)'):' · décomptée'));if(dc.congeP)notes.push('congé posé '+hm(dc.congeP)+(dc.congeH<dc.congeP?' · décompté '+hm(dc.congeH):''));if(i===5&&dc.samedi)notes.push('samedi +'+st.regles.samTaux+' %');
     var more=lock?'':'<button class="more" data-act="openday" data-i="'+i+'" aria-label="Autres heures du '+DAYL[i]+'">⋯</button>';
     var tot=wk?hm(dc.worked):dc.abs&&dc.counted?hm(dc.counted):'';
     ph+='<div class="prow'+(!wk&&!dc.abs?' off':'')+'"><div class="pday"><b>'+DAYN[i]+'</b><span>'+fmtD(dt)+'</span></div><div class="pmid">'+sel+
@@ -612,7 +616,7 @@ function viewSheet(){var i=S.sheet,w=week(),d=w.days[i]||{},st=S.settings,mon=mo
   var xx=d.x||{};
   if(isWork(d)&&i<5)times+='<div class="row2"><div class="field"><label for="x-recupH">Heures à récupérer prises ce jour</label><input type="time" id="x-recupH" data-act="xset" data-k="recupH" value="'+(+xx.recupH?toTime(+xx.recupH):"")+'"></div>'+
     '<div class="field"><label for="x-congeH">Congé payé pris ce jour</label><input type="time" id="x-congeH" data-act="xset" data-k="congeH" value="'+(+xx.congeH?toTime(+xx.congeH):"")+'"></div></div>'+
-    '<div class="tiny">Ces heures complètent la journée et sont retirées du bon compteur à l\'envoi de la fiche.</div>';
+    '<div class="tiny">Pose-les quand tu pars en dehors de tes heures. Elles ne sont décomptées que pour compléter la journée jusqu\'à l\'horaire théorique (jamais en heures sup).</div>';
   if(d.type&&ABS[d.type]&&d.type!=="ferie")times+='<div class="row2"><div class="field"><label for="d-dur">Durée comptée</label><input type="time" id="d-dur" data-act="dset" data-k="dur" value="'+toTime(dayCalc(d,i,st).counted)+'"></div></div><div class="tiny">Par défaut '+hm(st.comptes[d.type]||0)+'. Mets par exemple 3:30 pour une demi-journée.</div>';
   if(i===5)times+='<div class="tiny">Samedi : heures hors seuil de la semaine, toutes à récupérer avec '+st.regles.samTaux+' % de majoration. Dès '+hm(st.regles.panierMin)+' de travail : panier, équipe et indemnité samedi 3006.</div>';
   return'<div class="sheet-bg" data-act="close"><div class="sheet" role="dialog" aria-label="'+DAYL[i]+'"><div class="sheet-h"><b>'+DAYL[i]+' '+fmtD(dt)+'</b><button class="btn small" data-act="close">OK</button></div>'+g+times+ex+
@@ -710,7 +714,7 @@ function viewSettings(){var st=S.settings,p=st.profil,m=st.mails,R=st.regles,pg=
     if(SY.api)out+='<div class="tiny">Lien pour connecter un autre appareil : ouvre ce lien sur le PC ou l\'iPhone.</div>'+copyLine("Lien",location.origin+location.pathname+"?api="+encodeURIComponent(SY.api)+"&cle="+encodeURIComponent(SY.cle))}
   if(pg==="aff")out+='<div class="card pad"><div class="field"><label for="s-theme">Thème</label><select id="s-theme" data-act="sset" data-p="theme"><option value="auto"'+(st.theme!=="light"&&st.theme!=="dark"?' selected':'')+'>Automatique (comme l\'iPhone)</option><option value="light"'+(st.theme==="light"?' selected':'')+'>Clair</option><option value="dark"'+(st.theme==="dark"?' selected':'')+'>Sombre</option></select></div></div>';
   if(pg==="save")out+=viewSnaps().replace('<h2>Sauvegardes</h2>','');
-  if(pg==="news")out+='<div class="card">'+CHANGELOG.map(function(c,i){return'<details style="border:0;border-bottom:1px solid var(--line);border-radius:0;background:none"'+(i===0?' open':'')+'><summary>Version '+c[0]+(c[0]===VERSION?' <span class="chip sent">Installée</span>':'')+' <span class="tiny">· '+c[1]+'</span></summary><ul style="margin:0 0 12px;padding:0 14px 0 32px;font-size:14px;color:var(--muted)">'+c[2].map(function(x){return'<li>'+esc(x)+'</li>'}).join("")+'</ul></details>'}).join("")+'</div>';
+  if(pg==="news")out+='<div class="card">'+CHANGELOG.map(function(c,i){return'<details style="border:0;border-bottom:1px solid var(--line);border-radius:0;background:none"'+(i===0?' open':'')+'><summary>Version '+c[0]+' bêta'+(c[0]===VERSION?' <span class="chip sent">Installée</span>':'')+' <span class="tiny">· '+c[1]+'</span></summary><ul style="margin:0 0 12px;padding:0 14px 0 32px;font-size:14px;color:var(--muted)">'+c[2].map(function(x){return'<li>'+esc(x)+'</li>'}).join("")+'</ul></details>'}).join("")+'</div>';
   return out+'</section>'}
 function rulesDefault(){var d=defaultSettings(""),a=S.settings;return JSON.stringify(d.regles)===JSON.stringify(Object.assign({},d.regles,a.regles))&&JSON.stringify(d.comptes)===JSON.stringify(Object.assign({},d.comptes,a.comptes))}
 
@@ -951,10 +955,10 @@ function ficheData(w,c,st){var days=w.days.map(function(d){return d||{}}),F={mat
   ["ga10","elec","ga20","ga80","g001"].forEach(function(k){F[k]=v(function(x){return x.x[k]?h2m(x.x[k]):""})});
   var obs=[];for(var i=0;i<7;i++){var dt=dayDate(S.cur,i),fn=ferieOf(dt),x=c.days[i];
     if(fn&&i<5&&x.abs==="ferie")obs.push(DAYL[i]+" "+fmtD(dt)+" : férié ("+fn+").");
-    if(x.recupH)obs.push(DAYL[i]+" "+fmtD(dt)+" : "+hm(x.recupH)+" d'heures à récupérer prise"+(isWork(days[i])?" (départ "+toTime(days[i].end)+").":"."));
-    if(x.congeH)obs.push(DAYL[i]+" "+fmtD(dt)+" : "+hm(x.congeH)+" de congé payé.");}
+    if(x.recupP)obs.push(DAYL[i]+" "+fmtD(dt)+" : départ à "+toTime(days[i].end)+", "+hm(x.recupP)+" d'heures à récupérer posée.");
+    if(x.congeP)obs.push(DAYL[i]+" "+fmtD(dt)+" : "+hm(x.congeP)+" de congé payé posé.");}
   String(w.obs||"").split(/\n/).forEach(function(l){if(l.trim())obs.push(l.trim())});
-  F.obs=obs.slice(0,6);return F}
+  F.obs=obs.slice(0,6);F.net=c.net;return F}
 function ficheCanvas(w,c,st){var cv=document.createElement("canvas"),F=ficheData(w,c,st);
   var W=1000,H=720,SC=2;cv.width=W*SC;cv.height=H*SC;var x=cv.getContext("2d");x.scale(SC,SC);
   var Y="#FFFDB0",LINE="#555",GRAY="#D6D6CC",SERIF='"Times New Roman",Times,serif',SANS='Arial,Helvetica,sans-serif';
@@ -983,6 +987,8 @@ function ficheCanvas(w,c,st){var cv=document.createElement("canvas"),F=ficheData
   var yn=y;row(24,"HEURES DE NUIT",F.nuit,F.nuitTot,{bold:1,center:1,fill:GRAY,ls:11});x.fillStyle=GRAY;x.fillRect(XT+TW+1,yn+1,962-XT-TW-2,23);rect(XT+TW,yn,962-XT-TW,24);
   row(24,"Prime de panier  3001",F.panier,null,{n:6,noTot:1});row(24,"Prime d'équipe  3008",F.equipe,null,{n:6,noTot:1});row(24,"Indemnité de Samedi  3006",F.sam,null,{n:6,noTot:1});
   [["Formation permanente (GA 40)",F.ga40],["Grève AN",F.greve],["Informations syndicales (GA 10)",F.ga10],["Election Délégué Personnel CE",F.elec],["Heures de Réunion  (GA 20)",F.ga20],["Crédit d'heures       (GA 80)",F.ga80],["Réunion info vœux   (G001)",F.g001]].forEach(function(r){row(21,r[0],r[1],null,{n:5,noTot:1,ls:10.5,vs:13})});
+  var bx=740,by=440;txt("HEURES À RÉCUPÉRER",bx+100,by,{bold:1,size:13,align:"center"});txt("CETTE SEMAINE",bx+100,by+17,{bold:1,size:13,align:"center"});
+  rect(bx+20,by+32,160,44,"#FFFFE8");txt((F.net<0?"-":"")+h2m(Math.abs(F.net)),bx+100,by+55,{bold:1,size:24,align:"center",color:F.net<0?"#9a3412":"#1b5e20"});
   y+=14;txt("OBSERVATIONS :",L0+40,y+12,{bold:1,size:12});
   F.obs.forEach(function(l,i){txt(l,L0+170,y+12+i*18,{size:13,color:"#1b2a7a"})});
   return cv}
