@@ -636,8 +636,8 @@ function summaryCard(c){var R=S.settings.regles,max=Math.max(R.seuil+R.palier,c.
 
 function mailList(s){return String(s||"").split(/[;,\s]+/).filter(Boolean)}
 function mailPanel(){var st=S.settings,to=mailList(st.mails.paye),cc=st.mails.ccResp?mailList(st.mails.resp):[],subj=subject();
-  var ol="ms-outlook://compose?to="+to.map(encodeURIComponent).join(",")+(cc.length?"&cc="+cc.map(encodeURIComponent).join(","):"")+"&subject="+encodeURIComponent(subj);
-  var mt="mailto:"+to.join(",")+"?subject="+encodeURIComponent(subj)+(cc.length?"&cc="+cc.join(","):"");
+  var ol="ms-outlook://compose?to="+to.map(encodeURIComponent).join(";")+(cc.length?"&cc="+cc.map(encodeURIComponent).join(";"):"")+"&subject="+encodeURIComponent(subj);
+  var mt="mailto:"+to.join(";")+"?subject="+encodeURIComponent(subj)+(cc.length?"&cc="+cc.join(";"):"");
   var w=week(),c=weekCalc(w,st);
   return'<div class="card pad"><b>Envoyer au service paye</b>'+
   '<div class="tiny">1. L\'image de la fiche est copiée. 2. Ouvre Outlook : destinataires et objet sont remplis. 3. Dans le message, appuie longuement puis <b>Coller</b>.</div>'+
@@ -1140,7 +1140,7 @@ function verifCard(k){var w=S.weeks[k],ch=w.check,open=S.vopen?S.vopen===k:(!S.v
   if(open){h+='<table class="vtab"><tr><th>Élément</th><th>Appli</th><th>Compta</th><th></th></tr>'+ch.items.map(function(x){return'<tr class="'+(x.ok?'':'bad')+'"><td>'+esc(x.l)+(x.fav?'<br><small style="font-weight:600">'+(x.fav>0?'en ta faveur':'en ta défaveur')+'</small>':'')+'</td><td>'+esc(x.a)+'</td><td>'+esc(x.b)+'</td><td>'+(x.ok?'✓':'✗')+'</td></tr>'}).join("")+'</table>'+
     '<div class="tiny" style="padding:6px 10px">Vérifiée le '+esc(ch.at)+(ch.info.length?' · non vérifié : '+esc(ch.info.join(", ")):'')+'</div>';
     if(ch.bad){var st=S.settings,to=mailList(st.mails.paye),subj="Écart de pointage semaine "+(+k.slice(6))+(st.profil.nom?" – "+st.profil.nom:"");
-      h+='<div class="pad"><div class="vmsg">'+esc(verifMsg(k))+'</div><div class="btns"><button class="btn small primary" data-act="vcopy" data-k="'+k+'">Copier le message</button><a class="btn small" style="text-align:center;text-decoration:none" href="'+esc("ms-outlook://compose?to="+to.map(encodeURIComponent).join(",")+"&subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(verifMsg(k)))+'">Ouvrir Outlook</a></div></div>'}}
+      h+='<div class="pad"><div class="vmsg">'+esc(verifMsg(k))+'</div><div class="btns"><button class="btn small primary" data-act="vcopy" data-k="'+k+'">Copier le message</button><a class="btn small" style="text-align:center;text-decoration:none" href="'+esc("ms-outlook://compose?to="+to.map(encodeURIComponent).join(";")+"&subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(verifMsg(k)))+'">Ouvrir Outlook</a></div></div>'}}
   return h+'</div>'}
 function viewVerif(){var out='<div class="card pad vbox"><b style="font-size:17px">Vérifier avec la compta</b><div class="tiny">Dans le logiciel de la compta, ouvre la semaine, fais <b>Ctrl+A</b> puis <b>Ctrl+C</b>, et colle ici. Tu peux coller plusieurs semaines à la suite.</div>'+
     '<textarea id="vtxt" data-act="vtxt" placeholder="Colle ici la page de la compta…">'+esc(S.vtxt||"")+'</textarea><button class="btn primary" data-act="vrun">Vérifier</button></div>';
