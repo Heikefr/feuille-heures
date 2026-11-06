@@ -1,5 +1,5 @@
 // Feuille d'heures — fonctionnement hors connexion
-const CACHE = "feuille-heures-v8";
+const CACHE = "feuille-heures-v9";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 const EXCEL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
 
