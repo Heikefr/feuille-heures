@@ -1108,18 +1108,21 @@ function parseCompta(txt){
 function compareCompta(w,st,P){var c=weekCalc(w,st),items=[],info=[];
   function eq(a,b,tol){return Math.abs((a||0)-(b||0))<=(tol==null?1:tol)}
   for(var i=0;i<7;i++){var dc=c.days[i],pd=P.days[i]||{act:0,abs:{},ind:{}},dn=DAYN[i]+" "+fmtD(dayDate(P.key,i));
-    if(dc.worked||pd.act)items.push({l:dn+" · travail",a:hm(dc.worked),b:hm(pd.act),ok:eq(dc.worked,pd.act)});
+    if(dc.worked||pd.act)items.push({l:dn+" · travail",a:hm(dc.worked),b:hm(pd.act),ok:eq(dc.worked,pd.act),an:dc.worked,bn:pd.act,s:1});
     var cn=0;Object.keys(pd.ind).forEach(function(k){if(k!=="I2")cn+=pd.ind[k]});
-    if(dc.night||cn)items.push({l:dn+" · nuit",a:hm(dc.night),b:hm(cn),ok:eq(dc.night,cn)});
+    if(dc.night||cn)items.push({l:dn+" · nuit",a:hm(dc.night),b:hm(cn),ok:eq(dc.night,cn),an:dc.night,bn:cn,s:1});
     var aA={},aB={};if(dc.abs)aA[appCat(dc.abs)]=(aA[appCat(dc.abs)]||0)+dc.counted;if(dc.recupH)aA["Récup"]=(aA["Récup"]||0)+dc.recupH;if(dc.congeH){var ck=appCat(dc.congeK);aA[ck]=(aA[ck]||0)+dc.congeH}
     Object.keys(pd.abs).forEach(function(k){var cat=COMPTA[k]||k;aB[cat]=(aB[cat]||0)+pd.abs[k]});
-    Object.keys(Object.assign({},aA,aB)).forEach(function(cat){items.push({l:dn+" · "+cat.toLowerCase(),a:aA[cat]?hm(aA[cat]):"—",b:aB[cat]?hm(aB[cat]):"—",ok:eq(aA[cat],aB[cat])})})}
-  var hs=c.hs+c.samedi,ev=P.evp;
-  if(P.ec)items.push({l:"Heures sup de la semaine",a:hm(hs),b:hm(P.ec.tot),ok:eq(hs,P.ec.tot),w:1});
-  items.push({l:"Heures sup majorées 125 %",a:hm(Math.floor(c.hs1*1.25)),b:hm(ev.R125||0),ok:eq(c.hs1*1.25,ev.R125||0,1),w:1});
-  if(c.hs2||ev.R150)items.push({l:"Heures sup majorées 150 %",a:hm(Math.floor(c.hs2*1.5)),b:hm(ev.R150||0),ok:eq(c.hs2*1.5,ev.R150||0,1),w:1});
-  items.push({l:"Paniers / équipe",a:c.panier+" / "+c.panier,b:(ev.PANIE||0)+" / "+(ev.PEQUI||0),ok:c.panier===(ev.PANIE||0)&&c.panier===(ev.PEQUI||0),w:1});
-  items.push({l:"Majoration de nuit",a:hm(c.majNuit),b:hm(ev.RMNUI||0),ok:eq(c.majNuit,ev.RMNUI||0),w:1});
+    Object.keys(Object.assign({},aA,aB)).forEach(function(cat){items.push({l:dn+" · "+cat.toLowerCase(),a:aA[cat]?hm(aA[cat]):"—",b:aB[cat]?hm(aB[cat]):"—",ok:eq(aA[cat],aB[cat]),an:aA[cat]||0,bn:aB[cat]||0,s:cat==="Férié"?1:-1})})}
+  var hs=c.hs+c.samedi,ev=P.evp,i2=0,hasI2=false;P.days.forEach(function(d){if(d.ind.I2!=null){hasI2=true;i2+=d.ind.I2}});
+  var cHs=hasI2?i2:(ev.R125!=null||ev.R150!=null)?Math.round((ev.R125||0)/1.25+(ev.R150||0)/1.5):(P.ec?P.ec.tot:null);
+  if(cHs!=null)items.push({l:"Heures sup de la semaine",a:hm(hs),b:hm(cHs),ok:eq(hs,cHs,hasI2?1:2),an:hs,bn:cHs,s:1,w:1});
+  items.push({l:"Heures sup majorées 125 %",a:hm(Math.floor(c.hs1*1.25)),b:hm(ev.R125||0),ok:eq(c.hs1*1.25,ev.R125||0,1),an:c.hs1*1.25,bn:ev.R125||0,s:1,w:1});
+  if(c.hs2||ev.R150)items.push({l:"Heures sup majorées 150 %",a:hm(Math.floor(c.hs2*1.5)),b:hm(ev.R150||0),ok:eq(c.hs2*1.5,ev.R150||0,1),an:c.hs2*1.5,bn:ev.R150||0,s:1,w:1});
+  items.push({l:"Primes de panier",a:String(c.panier),b:String(ev.PANIE||0),ok:c.panier===(ev.PANIE||0),an:c.panier,bn:ev.PANIE||0,s:1,w:1});
+  items.push({l:"Primes d'équipe",a:String(c.panier),b:String(ev.PEQUI||0),ok:c.panier===(ev.PEQUI||0),an:c.panier,bn:ev.PEQUI||0,s:1,w:1});
+  items.push({l:"Majoration de nuit",a:hm(c.majNuit),b:hm(ev.RMNUI||0),ok:eq(c.majNuit,ev.RMNUI||0),an:c.majNuit,bn:ev.RMNUI||0,s:1,w:1});
+  items.forEach(function(x){if(!x.ok)x.fav=((x.bn-x.an)*x.s)>0?1:-1});
   Object.keys(ev).forEach(function(k){if(["R125","R150","PANIE","PEQUI","RMNUI"].indexOf(k)<0)info.push(k+" "+ev[k]+(COMPTA_INFO[k]?" ("+COMPTA_INFO[k]+")":""))});
   P.days.forEach(function(d){Object.keys(d.abs).forEach(function(k){if(!COMPTA[k]&&info.indexOf(k)<0)info.push(k+" (code d'absence inconnu)")})});
   var now=new Date();
@@ -1131,10 +1134,10 @@ function runVerif(){var ta=document.getElementById("vtxt"),P=parseCompta(ta?ta.v
   S.vtxt="";S.vopen=null;render();toast(P.length+" semaine(s) vérifiée(s)")}
 function verifMsg(k){var w=S.weeks[k],bad=w.check.items.filter(function(x){return!x.ok}),p=S.settings.profil;
   return"Bonjour,\n\nEn comparant ma feuille d'heures de la semaine "+(+k.slice(6))+" (du "+fmtD(dayDate(k,0))+" au "+fmtD(dayDate(k,6))+") avec le logiciel, je trouve "+(bad.length>1?"ces écarts":"cet écart")+" :\n"+
-    bad.map(function(x){return"- "+x.l+" : ma fiche "+x.a+", le logiciel "+x.b}).join("\n")+"\n\nPouvez-vous vérifier ?\nMerci,\n"+(p.nom||"")}
+    bad.map(function(x){return"- "+x.l+" : ma fiche "+x.a+", le logiciel "+x.b+(x.fav?(x.fav>0?" (en ma faveur)":" (en ma défaveur)"):"")}).join("\n")+"\n\nPouvez-vous vérifier ?\nMerci,\n"+(p.nom||"")}
 function verifCard(k){var w=S.weeks[k],ch=w.check,open=S.vopen?S.vopen===k:(!S.vres||S.vres.length===1);
   var h='<div class="vres"><button class="vhd '+(ch.bad?'ko':'ok')+'" data-act="vopen" data-k="'+k+'" data-open="'+(open?1:0)+'"><span>S'+(+k.slice(6))+' · '+fmtD(dayDate(k,0))+' – '+fmtD(dayDate(k,6))+'</span><span>'+(ch.bad?'✗ '+ch.bad+' écart'+(ch.bad>1?'s':''):'✓ tout correspond')+'</span></button>';
-  if(open){h+='<table class="vtab"><tr><th>Élément</th><th>Appli</th><th>Compta</th><th></th></tr>'+ch.items.map(function(x){return'<tr class="'+(x.ok?'':'bad')+'"><td>'+esc(x.l)+'</td><td>'+esc(x.a)+'</td><td>'+esc(x.b)+'</td><td>'+(x.ok?'✓':'✗')+'</td></tr>'}).join("")+'</table>'+
+  if(open){h+='<table class="vtab"><tr><th>Élément</th><th>Appli</th><th>Compta</th><th></th></tr>'+ch.items.map(function(x){return'<tr class="'+(x.ok?'':'bad')+'"><td>'+esc(x.l)+(x.fav?'<br><small style="font-weight:600">'+(x.fav>0?'en ta faveur':'en ta défaveur')+'</small>':'')+'</td><td>'+esc(x.a)+'</td><td>'+esc(x.b)+'</td><td>'+(x.ok?'✓':'✗')+'</td></tr>'}).join("")+'</table>'+
     '<div class="tiny" style="padding:6px 10px">Vérifiée le '+esc(ch.at)+(ch.info.length?' · non vérifié : '+esc(ch.info.join(", ")):'')+'</div>';
     if(ch.bad){var st=S.settings,to=mailList(st.mails.paye),subj="Écart de pointage semaine "+(+k.slice(6))+(st.profil.nom?" – "+st.profil.nom:"");
       h+='<div class="pad"><div class="vmsg">'+esc(verifMsg(k))+'</div><div class="btns"><button class="btn small primary" data-act="vcopy" data-k="'+k+'">Copier le message</button><a class="btn small" style="text-align:center;text-decoration:none" href="'+esc("ms-outlook://compose?to="+to.map(encodeURIComponent).join(",")+"&subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(verifMsg(k)))+'">Ouvrir Outlook</a></div></div>'}}
