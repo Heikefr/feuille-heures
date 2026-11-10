@@ -390,7 +390,7 @@ function dayCalc(d,idx,st){
     if(idx>=5)r.theo=0;
     r.recupH=r.recupP;r.congeH=r.congeP;
     r.counted=r.worked+r.recupH+r.congeH;
-    r.hsJour=Math.max(0,r.counted-r.theo);
+    r.hsJour=Math.max(0,r.worked-r.theo);
     if(idx===5){r.samedi=r.worked;r.counted=0;r.hsJour=0;if(r.worked>=R.panierMin){r.panier=1;r.sam=1}}
     r.alerte=r.worked>R.maxJour;
   }else if(d.type&&(ABS[d.type]||d.type==="conge"||d.type==="cjour")){
@@ -411,7 +411,8 @@ function weekCalc(w,st){
     t.greve+=c.greveJour+c.x.greve;t.formation+=c.formJour;}
   t.conge+=t.congeH;
   t.hs=0;for(i=0;i<7;i++)if(i!==5)t.hs+=t.days[i].hsJour;
-  if(R.hsCalc!=="jour")t.hs=Math.max(0,t.counted-R.seuil);
+  if(R.hsCalc!=="jour")t.hs=Math.max(0,t.counted-t.recupH-t.congeH-R.seuil);
+  t.pres=Math.max(0,t.counted-R.seuil);
   var hd=t.days.map(function(x,k){return k===5||!isWork(days[k]||{})?0:x.hsJour}),sm=hd.reduce(function(a,b){return a+b},0);
   if(sm>t.hs){var ex=sm-t.hs;for(i=6;i>=0&&ex>0;i--){var rr=Math.min(hd[i],ex);hd[i]-=rr;ex-=rr}}
   else if(sm<t.hs){for(i=6;i>=0;i--)if(i!==5&&isWork(days[i]||{})){hd[i]+=t.hs-sm;break}}
@@ -432,6 +433,7 @@ function keyOf(mon){var th=new Date(mon);th.setDate(th.getDate()+3);var y=th.get
 function monOfKey(k){var y=+k.slice(0,4),n=+k.slice(6);var d=mondayOf(new Date(y,0,4));d.setDate(d.getDate()+(n-1)*7);return d}
 function shiftKey(k,n){var d=monOfKey(k);d.setDate(d.getDate()+7*n);return keyOf(d)}
 function fmtD(d){return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")}
+var CET_MAX=8400,CET_SRC=["recup","c5","frac","anc","csup"];
 var CPT_DEF={recup:{n:"Heures à récupérer",u:"h"},cp:{n:"Congé principal (4 semaines)",u:"h"},c5:{n:"5e semaine",u:"h"},frac:{n:"Fractionnement",u:"h"},anc:{n:"Ancienneté",u:"j"},csup:{n:"Congés supplémentaires",u:"j"}};
 function ymdStr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function dayDate(k,i){var d=monOfKey(k);d.setDate(d.getDate()+i);return d}
@@ -446,12 +448,19 @@ function counters(st,weeks,today){today=today||new Date();var td=ymdStr(today),C
     out[k]=o});
   Object.keys(weeks).forEach(function(wk){var w=weeks[wk];if(!w)return;var days=w.days||[];
     for(var i=0;i<7;i++){var d=days[i];if(!d||!d.type)continue;var ds=ymdStr(dayDate(wk,i)),dc=dayCalc(d,i,st);
-      var add=function(key,val){var o=out[key];if(!o||!val)return;if(ds<=o.ref||ds<o.period.a||ds>o.period.b)return;if(ds<=td)o.pris+=val;else o.prevu+=val};
+      var add=function(key,val){var o=out[key];if(!o||!val||!o.period)return;if(ds<=o.ref||ds<o.period.a||ds>o.period.b)return;if(ds<=td)o.pris+=val;else o.prevu+=val};
       if(dc.abs){var key=dc.abs==="conge"?"cp":dc.abs==="cjour"?"csup":dc.abs;if(out[key])add(key,out[key].u==="j"?(Math.round(dc.counted/420*2)/2||1):dc.counted)}
       if(dc.recupH)add("recup",dc.recupH);if(dc.congeH)add(dc.congeK,dc.congeH)}
     var r=out.recup;if(w.validated&&wk>=r.from&&dayDate(wk,3).getFullYear()===yr){var g=weekCalc(w,st).gain;r.acq+=g;r.gain+=g}});
-  Object.keys(out).forEach(function(k){var o=out[k];o.dispo=o.acq-o.pris;o.reste=o.acq-o.pris-o.prevu});
+  var ce=C.cet||{},cet={k:"cet",n:"CET court terme",solde:+ce.solde||0,ref:ce.ref||"",refT:+ce.refT||0,max:CET_MAX,moves:[]};
+  (ce.moves||[]).forEach(function(m){var mt=+m.t||0,ds=m.date,src=out[m.src];
+    if(mt>cet.refT&&ds<=td){cet.solde+=+m.min||0}
+    if(src&&ds<=td&&ds>=src.period.a&&ds<=src.period.b&&mt>refT(C[m.src],src)){src.pris+=src.u==="j"?(+m.qty||0):(+m.min||0);src.cet=(src.cet||0)+(src.u==="j"?(+m.qty||0):(+m.min||0))}
+    cet.moves.push(m)});
+  cet.moves.sort(function(a,b){return(+b.t||0)-(+a.t||0)});out.cet=cet;
+  Object.keys(out).forEach(function(k){var o=out[k];if(k==="cet")return;o.dispo=o.acq-o.pris;o.reste=o.acq-o.pris-o.prevu});
   return out}
+function refT(b,o){if(b&&b.refT)return+b.refT;var d=(b&&b.ref)||o.ref;if(!d)return 0;var x=new Date(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10)+1);return x.getTime()}
 function soldeCalc(st,weeks){var c=counters(st,weeks),r=c.recup,rows=[],tot=r.acq-r.gain-r.pris;
   Object.keys(weeks).sort().forEach(function(k){var w=weeks[k];if(!w||!w.validated||k<r.from||dayDate(k,3).getFullYear()!==new Date().getFullYear())return;var x=weekCalc(w,st);tot+=x.gain;rows.push({k:k,c:x,after:tot})});
   return{solde:r.dispo,reste:r.reste,rows:rows}}
@@ -460,8 +469,8 @@ if(typeof module!=="undefined")module.exports={counters:counters,feries:feries,f
 
 <script>
 /* ===== Application ===== */
-var VERSION="0.7";
-var CHANGELOG=[["0.7","06/11/2026",["Vérification avec la compta : colle la page du logiciel (une ou plusieurs semaines), l'appli compare jour par jour et prépare le message en cas d'écart","Coche ✓ (ou !) dans la vue année pour les semaines vérifiées","Codes reconnus : G000, I9, I2, CP, CGPP, CPSUP, RHT, REC, JF, PANIE, PEQUI, RMNUI, R125 ; INDTR affiché pour information","Heures à récupérer et congés posés dans une journée : comptés en entier, comme la compta","Bouton « Vérifier » à la place de « Sauver » (sauvegarde automatique à chaque envoi)"]],["0.6","06/11/2026",["Compteurs détaillés en heures et en jours : récup (remise à zéro au 1er janvier), congé principal, 5e semaine, fractionnement, ancienneté, congés supplémentaires","En posant un congé, choix du compteur ; congés et récup retirés dès que la date est passée (prévus s'ils sont à venir)","Message de fractionnement pour 5 jours de congé principal entre novembre et mai","Rappels discrets : formulaire CET (avril, novembre) et récup à poser avant le 31/12","Import de l'historique de l'ancien fichier Excel","Fiche : case des heures de la semaine retirée ; semaine vide sans statut ; « Vider » efface aussi la note"]],["0.5","05/11/2026",["Correctif : heures sup affichées jour par jour sur la fiche, case des heures à récupérer de la semaine, récup posée décomptée seulement si elle complète la journée, Matin 3 en 5h30 – 12h30 (accord), bouton Copier retiré","Synchronisation iPhone ↔ PC par ton Google Sheet, protégée par un code d'accès","Fiche envoyée en image, à l'identique de la fiche papier, avec observations automatiques","Absences : « Heures à récupérer » et « Congé payé », heures partielles dans la journée et durée modifiable","Note par semaine, bouton « Poser la semaine en congé payé » et appui long dans la vue année","Prochaines échéances dans Compteur, avec ajout au Calendrier de l'iPhone","Vue année : congés en bleu, notes et formations en violet, centrée sur PC","Cases d'heure plus larges sur PC, Matin 3 jusqu'à 12:00 le vendredi","Choix du calcul des heures sup : jour par jour ou à la semaine"]],["0.4","05/11/2026",["Nouvel écran Semaine sur fond de fiche papier : horaire, arrivée et fin modifiables directement","Grande grille complète sur PC, comme la fenêtre de saisie de l'ancien fichier","Vue année pour aller à n'importe quelle semaine, avec l'état de chaque semaine","Glisser le doigt à gauche ou à droite pour changer de semaine","Réglages rangés comme sur iPhone, avec bouton pour rétablir les valeurs des accords","Corrections du compteur et des congés repliées"]],["0.3","05/11/2026",["Thème automatique, clair ou sombre dans Réglages","Jours fériés préremplis (les fériés du week-end sont affichés pour information)","Fiche au format de l'ancien fichier, copiée dans le corps du mail et ouverture d'Outlook avec destinataires et objet","Heures sup affichées jour par jour sur la fiche (total calculé sur la semaine) et horaire théorique par horaire","Gestionnaire de sauvegardes : liste, restauration, export, sauvegarde automatique","Boutons de remplissage raccourcis (Matin 1, Soir 2…)"]],["0.2","04/11/2026",["Samedi selon l'accord maintenance : heures hors seuil de 35 h, toutes à récupérer avec 50 % de majoration","Samedi : primes panier, équipe et indemnité 3006 ajoutées dès 6 h de travail","Alertes au-delà de 10 h par jour et 40 h par semaine","Compteur de congés payés (heures et jours maison) avec correction du solde","Nouveau type de journée : Jour maison"]],["0.1","04/11/2026",["Première version autonome : saisie de la semaine, heures sup, heures de nuit, primes panier et équipe","Compteur de récupération avec correction du solde","Fiche Excel envoyée par le menu de partage (Mail)","Sauvegarde et import des données, fonctionne hors connexion"]]];
+var VERSION="0.8";
+var CHANGELOG=[["0.8","10/11/2026",["Compteur CET : solde, « 105:00 sur 140:00 max », placements faits dans Pléiade retirés tout de suite du compteur d'origine","Vérification des soldes : colle le récapitulatif des soldes de la compta, l'appli compare chaque compteur à la date du relevé et peut se recaler dessus","Heure de récup ou de congé posée dans une journée : compte dans la présence (I2) mais pas dans les heures sup majorées (R125), comme la compta","Vérification d'une semaine : « Heures sup payées » (R125/R150) et « Présence au-delà de 35 h » (I2) séparées"]],["0.7","06/11/2026",["Vérification avec la compta : colle la page du logiciel (une ou plusieurs semaines), l'appli compare jour par jour et prépare le message en cas d'écart","Coche ✓ (ou !) dans la vue année pour les semaines vérifiées","Codes reconnus : G000, I9, I2, CP, CGPP, CPSUP, RHT, REC, JF, PANIE, PEQUI, RMNUI, R125 ; INDTR affiché pour information","Heures à récupérer et congés posés dans une journée : comptés en entier, comme la compta","Bouton « Vérifier » à la place de « Sauver » (sauvegarde automatique à chaque envoi)"]],["0.6","06/11/2026",["Compteurs détaillés en heures et en jours : récup (remise à zéro au 1er janvier), congé principal, 5e semaine, fractionnement, ancienneté, congés supplémentaires","En posant un congé, choix du compteur ; congés et récup retirés dès que la date est passée (prévus s'ils sont à venir)","Message de fractionnement pour 5 jours de congé principal entre novembre et mai","Rappels discrets : formulaire CET (avril, novembre) et récup à poser avant le 31/12","Import de l'historique de l'ancien fichier Excel","Fiche : case des heures de la semaine retirée ; semaine vide sans statut ; « Vider » efface aussi la note"]],["0.5","05/11/2026",["Correctif : heures sup affichées jour par jour sur la fiche, case des heures à récupérer de la semaine, récup posée décomptée seulement si elle complète la journée, Matin 3 en 5h30 – 12h30 (accord), bouton Copier retiré","Synchronisation iPhone ↔ PC par ton Google Sheet, protégée par un code d'accès","Fiche envoyée en image, à l'identique de la fiche papier, avec observations automatiques","Absences : « Heures à récupérer » et « Congé payé », heures partielles dans la journée et durée modifiable","Note par semaine, bouton « Poser la semaine en congé payé » et appui long dans la vue année","Prochaines échéances dans Compteur, avec ajout au Calendrier de l'iPhone","Vue année : congés en bleu, notes et formations en violet, centrée sur PC","Cases d'heure plus larges sur PC, Matin 3 jusqu'à 12:00 le vendredi","Choix du calcul des heures sup : jour par jour ou à la semaine"]],["0.4","05/11/2026",["Nouvel écran Semaine sur fond de fiche papier : horaire, arrivée et fin modifiables directement","Grande grille complète sur PC, comme la fenêtre de saisie de l'ancien fichier","Vue année pour aller à n'importe quelle semaine, avec l'état de chaque semaine","Glisser le doigt à gauche ou à droite pour changer de semaine","Réglages rangés comme sur iPhone, avec bouton pour rétablir les valeurs des accords","Corrections du compteur et des congés repliées"]],["0.3","05/11/2026",["Thème automatique, clair ou sombre dans Réglages","Jours fériés préremplis (les fériés du week-end sont affichés pour information)","Fiche au format de l'ancien fichier, copiée dans le corps du mail et ouverture d'Outlook avec destinataires et objet","Heures sup affichées jour par jour sur la fiche (total calculé sur la semaine) et horaire théorique par horaire","Gestionnaire de sauvegardes : liste, restauration, export, sauvegarde automatique","Boutons de remplissage raccourcis (Matin 1, Soir 2…)"]],["0.2","04/11/2026",["Samedi selon l'accord maintenance : heures hors seuil de 35 h, toutes à récupérer avec 50 % de majoration","Samedi : primes panier, équipe et indemnité 3006 ajoutées dès 6 h de travail","Alertes au-delà de 10 h par jour et 40 h par semaine","Compteur de congés payés (heures et jours maison) avec correction du solde","Nouveau type de journée : Jour maison"]],["0.1","04/11/2026",["Première version autonome : saisie de la semaine, heures sup, heures de nuit, primes panier et équipe","Compteur de récupération avec correction du solde","Fiche Excel envoyée par le menu de partage (Mail)","Sauvegarde et import des données, fonctionne hors connexion"]]];
 var TODAY=new Date();
 var S={settings:defaultSettings(keyOf(mondayOf(TODAY))),weeks:{},cur:keyOf(mondayOf(TODAY)),tab:"week",sheet:null,db:null,ready:false,offline:false,lastExport:null,toast:null};
 var app=document.getElementById("app");
@@ -693,7 +702,7 @@ function exportIcs(list,name){if(!list.length){toast("Aucune échéance à ajout
   shareFile(new Blob([icsFor(list)],{type:"text/calendar"}),name,"Échéances").then(function(ok){if(ok)toast("Ouvre le fichier .ics (app Fichiers) pour l'ajouter au Calendrier")})}
 function reminders(){var td=new Date(),m=td.getMonth()+1,y=td.getFullYear(),r=[],rc=(S._cpt||counters(S.settings,S.weeks)).recup;
   var cet=m<=4?"30/04/"+y:m<=11?"30/11/"+y:"30/04/"+(y+1);
-  r.push({on:m===4||m===11,t:"Formulaire CET à rendre avant le "+cet,d:"Pour placer de la récup, la 5e semaine ou l'ancienneté sur ton compte épargne-temps (versement au "+(cet.indexOf("30/04")===0?"31/05":"31/12")+")."});
+  r.push({on:m===4||m===11,t:"Placement CET possible jusqu'au "+cet,d:"Dans Pléiade : récup, 5e semaine, fractionnement ou ancienneté, jusqu'à "+hm(CET_MAX)+" au CET. Puis ajoute-le dans la carte CET."});
   r.push({on:m===12&&rc.reste>0,t:"Récup : "+hm(rc.reste)+" à poser avant le 31/12/"+y,d:"Le compteur de récup repart à zéro le 1er janvier."});
   return r}
 function viewReminders(onlyOn){return reminders().filter(function(x){return!onlyOn||x.on}).map(function(x){return'<div class="remind'+(x.on?' on':'')+'"><b>'+esc(x.t)+'</b><span>'+esc(x.d)+'</span></div>'}).join("")}
@@ -713,7 +722,7 @@ function cptCard(o){var H=o.u==="h",f=function(v){return H?hm(v):fmtJ(v)+" j"};
   var big=f(o.reste),sm=H?"≈ "+fmtJ(o.reste/420)+" jour"+(Math.abs(o.reste)>=840?"s":""):hm(o.reste*420),tot=Math.max(o.acq,o.pris+o.prevu,0.0001);
   var bar='<div class="cbar"><i style="width:'+(o.pris/tot*100)+'%;background:var(--abs)"></i><i style="width:'+(o.prevu/tot*100)+'%;background:var(--note)"></i><i style="width:'+(Math.max(0,o.reste)/tot*100)+'%;background:'+(o.k==="recup"?'var(--ok)':'var(--accent)')+'"></i></div>';
   var h='<div class="ccard'+(o.reste<=0?' zero':'')+'"><div class="ctop"><b>'+esc(o.n)+'</b><small>'+(o.prevu?'reste après prévus':'reste')+'</small></div><div class="cval"><span class="mono">'+big+'</span><span>'+sm+'</span></div>'+bar+
-    '<div class="cleg"><span>Acquis <b>'+f(o.acq)+'</b></span><span>Pris <b>'+f(o.pris)+'</b></span><span>Prévu <b>'+f(o.prevu)+'</b></span>'+(S.fix===o.k?'':'<button class="linkbtn" data-act="fix" data-k="'+o.k+'">Corriger</button>')+'</div>';
+    '<div class="cleg"><span>Acquis <b>'+f(o.acq)+'</b></span><span>Pris <b>'+f(o.pris)+'</b>'+(o.cet?' dont CET '+f(o.cet):'')+'</span><span>Prévu <b>'+f(o.prevu)+'</b></span>'+(S.fix===o.k?'':'<button class="linkbtn" data-act="fix" data-k="'+o.k+'">Corriger</button>')+'</div>';
   if(S.fix===o.k){var b=(S.settings.cpt||{})[o.k]||{};var ia=o.acq-(o.k==="recup"?o.gain:0)-(o.k==="frac"?((b.adds||[]).reduce(function(s,a){return s+(+a.min||0)},0)):0);
     h+='<div class="row2"><div class="field"><label for="cf-a">Acquis (relevé)</label><input type="text" id="cf-a" data-act="cfix" value="'+(H?hm(o.acq):o.acq)+'"></div><div class="field"><label for="cf-p">Pris (relevé)</label><input type="text" id="cf-p" data-act="cfix" value="'+(H?hm(o.pris):o.pris)+'"></div></div>'+
       '<div class="tiny">Recopie les colonnes « Acquis » et « Pris » de ton relevé d\'aujourd\'hui. Les jours que tu poses après aujourd\'hui seront retirés automatiquement.</div><div class="btns"><button class="btn small primary" data-act="fixsave">Enregistrer</button><button class="btn small" data-act="fixno">Annuler</button></div>'}
@@ -722,10 +731,28 @@ function parseHM(v){v=String(v||"").trim().replace("h",":");var neg=/^-/.test(v)
 function saveCounter(k){var o=S._cpt[k],H=o.u==="h",a=document.getElementById("cf-a").value,p=document.getElementById("cf-p").value;
   var va=H?parseHM(a):parseFloat(String(a).replace(",",".")),vp=H?parseHM(p):parseFloat(String(p).replace(",","."));if(va==null||isNaN(va)||vp==null||isNaN(vp)){toast("Valeur incorrecte");return}
   var td=new Date(),cp=S.settings.cpt=S.settings.cpt||{},old=cp[k]||{};
-  if(k==="recup")cp.recup={year:td.getFullYear(),acq:va,pris:vp,ref:ymdStr(td),from:keyOf(mondayOf(td))};
+  if(k==="recup")cp.recup={year:td.getFullYear(),acq:va,pris:vp,ref:ymdStr(td),refT:Date.now(),from:keyOf(mondayOf(td))};
   else{var per=cpPeriod(td).a,adds=(old.adds||[]).filter(function(x){return x.per===per});if(k==="frac")va-=adds.reduce(function(s,x){return s+(+x.min||0)},0);
-    cp[k]={per:per,acq:va,pris:vp,ref:ymdStr(td),adds:old.adds,done:old.done}}
+    cp[k]={per:per,acq:va,pris:vp,ref:ymdStr(td),refT:Date.now(),adds:old.adds,done:old.done}}
   saveSettings()}
+function cetCard(o){var pct=Math.min(100,o.solde/o.max*100),over=o.solde>o.max,h='<div class="ccard'+(o.solde<=0?' zero':'')+'"><div class="ctop"><b>'+esc(o.n)+'</b><small>au compte</small></div>'+
+    '<div class="cval"><span class="mono">'+hm(o.solde)+'</span><span>≈ '+fmtJ(o.solde/420)+' jour'+(o.solde>=840?'s':'')+'</span></div>'+
+    '<div class="cbar"><i style="width:'+pct+'%;background:'+(over?'var(--warn)':'var(--accent)')+'"></i></div>'+
+    '<div class="cleg"><span><b>'+hm(o.solde)+'</b> sur <b>'+hm(o.max)+'</b> max (20 jours)</span><span>'+(over?'plafond dépassé':'encore '+hm(o.max-o.solde)+' possibles')+'</span></div>';
+  o.moves.slice(0,6).forEach(function(m){var src=CPT_DEF[m.src]||{n:"?"};h+='<div class="tiny" style="border-top:1px solid var(--line);padding-top:5px;display:flex;justify-content:space-between;gap:8px"><span>'+fmtD(new Date(+m.date.slice(0,4),+m.date.slice(5,7)-1,+m.date.slice(8,10)))+'/'+m.date.slice(0,4)+' · +'+hm(+m.min||0)+' depuis '+esc(src.n.toLowerCase())+(src.u==="j"?' ('+fmtJ(+m.qty)+' j)':'')+'</span><button class="linkbtn" data-act="cetdel" data-id="'+esc(m.id)+'">Supprimer</button></div>'});
+  if(S.fix==="cet")h+='<div class="field"><label for="cf-c">Solde de ton CET (Pléiade ou relevé)</label><input type="text" id="cf-c" value="'+hm(o.solde)+'"></div><div class="btns"><button class="btn small primary" data-act="cetfix">Enregistrer</button><button class="btn small" data-act="fixno">Annuler</button></div>';
+  else if(S.fix==="cetadd"){var cn=S._cpt;h+='<div class="field"><label for="cf-src">Pris sur</label><select id="cf-src" data-act="cetsrc">'+CET_SRC.map(function(k){var c=cn[k],H=c.u==="h";return'<option value="'+k+'"'+(S.cetSrc===k?' selected':'')+'>'+esc(c.n)+' · '+(H?hm(c.reste):fmtJ(c.reste)+' j')+' dispo</option>'}).join("")+'</select></div>'+
+    '<div class="field"><label for="cf-q2">'+((CPT_DEF[S.cetSrc||"recup"]||{}).u==="j"?'Nombre de jours':'Heures placées')+'</label><input type="text" id="cf-q2" placeholder="'+((CPT_DEF[S.cetSrc||"recup"]||{}).u==="j"?'1':'35:00')+'"></div>'+
+    '<div class="tiny">Le placement est appliqué tout de suite : retiré du compteur d\'origine, ajouté au CET.</div><div class="btns"><button class="btn small primary" data-act="cetsave">Ajouter</button><button class="btn small" data-act="fixno">Annuler</button></div>'}
+  else h+='<div class="btns"><button class="btn small" data-act="fix" data-k="cetadd">+ Placement fait dans Pléiade</button><button class="btn small" data-act="fix" data-k="cet">Corriger</button></div>';
+  return h+'</div>'}
+function saveCet(kind){var cp=S.settings.cpt=S.settings.cpt||{},ce=cp.cet=cp.cet||{moves:[]};ce.moves=ce.moves||[];
+  if(kind==="fix"){var v=parseHM(document.getElementById("cf-c").value);if(v==null){toast("Valeur incorrecte");return false}ce.solde=v;ce.ref=ymdStr(new Date());ce.refT=Date.now();saveSettings();toast("CET mis à jour");return true}
+  var k=document.getElementById("cf-src").value,u=CPT_DEF[k].u,raw=document.getElementById("cf-q2").value,q=u==="j"?parseFloat(String(raw).replace(",",".")):parseHM(raw);
+  if(q==null||isNaN(q)||q<=0){toast("Quantité incorrecte");return false}
+  var min=u==="j"?Math.round(q*420):q,c=S._cpt;
+  ce.moves.push({id:Date.now().toString(36),t:Date.now(),date:ymdStr(new Date()),src:k,qty:u==="j"?q:min,min:min});saveSettings();
+  var tot=c.cet.solde+min;toast("CET : "+hm(tot)+" sur "+hm(CET_MAX)+(tot>CET_MAX?" · plafond dépassé":""));return true}
 function viewBank(){var st=S.settings,cn=S._cpt||counters(st,S.weeks),out='<section>';
   out+='<h2>À ne pas oublier</h2>'+viewReminders(false);
   fracCands().forEach(function(x){out+=fracCard(x)});
@@ -737,6 +764,8 @@ function viewBank(){var st=S.settings,cn=S._cpt||counters(st,S.weeks),out='<sect
   out+='<h2>Heures à récupérer · '+cn.recup.period.label+'</h2>'+cptCard(cn.recup);
   out+='<h2>Congés payés · '+cn.cp.period.label+'</h2><div class="cgrid">'+cptCard(cn.cp)+cptCard(cn.c5)+cptCard(cn.frac)+'</div>';
   out+='<h2>Autres droits (en jours)</h2><div class="cgrid">'+cptCard(cn.anc)+cptCard(cn.csup)+'</div>';
+  out+='<h2>Compte épargne-temps (CET)</h2>'+cetCard(cn.cet);
+  out+='<button class="btn" data-act="sverif" style="width:100%">Vérifier mes soldes avec la compta</button>';
   var acq=(st.cpt||{}).cpacq;out+='<div class="tiny">CP en cours d\'acquisition (pour la période suivante) : '+(acq!=null?'<b class="mono">'+hm(acq)+'</b> · ≈ '+fmtJ(acq/420)+' jours':'non renseigné')+' · <button class="linkbtn" data-act="fix" data-k="cpacq">Modifier</button></div>';
   if(S.fix==="cpacq")out+='<div class="card pad"><div class="field"><label for="cf-q">CP en cours d\'acquisition (relevé)</label><input type="text" id="cf-q" data-act="cfix" value="'+(acq!=null?hm(acq):"")+'"></div><div class="btns"><button class="btn small primary" data-act="fixacq">Enregistrer</button><button class="btn small" data-act="fixno">Annuler</button></div></div>';
   var s=soldeCalc(st,S.weeks);
@@ -824,6 +853,10 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   else if(a==="poseconge"){poseConge(el.dataset.k,el.dataset.t);S.pickConge=null;render();toast("Semaine "+(+el.dataset.k.slice(6))+" posée en "+ABS[el.dataset.t].toLowerCase()+" (fériés conservés)")}
   else if(a==="fix"){S.fix=el.dataset.k;render()}
   else if(a==="fixno"){S.fix=null;render()}
+  else if(a==="cetfix"||a==="cetsave"){if(saveCet(a==="cetfix"?"fix":"add")){S.fix=null;render()}}
+  else if(a==="cetdel"){var ce=(S.settings.cpt||{}).cet;if(ce){ce.moves=(ce.moves||[]).filter(function(m){return m.id!==el.dataset.id});saveSettings();render();toast("Placement supprimé")}}
+  else if(a==="srecal"){recalSoldes()}
+  else if(a==="sverif"){S.tab="week";S.verif=true;S.vres=null;render();window.scrollTo(0,0)}
   else if(a==="fixacq"){var q=parseHM(document.getElementById("cf-q").value);if(q==null){toast("Valeur incorrecte");return}(S.settings.cpt=S.settings.cpt||{}).cpacq=q;S.fix=null;saveSettings();render()}
   else if(a==="fixsave"){saveCounter(S.fix);S.fix=null;render();toast("Compteur mis à jour")}
   else if(a==="fracadd"||a==="fracno"){var cp=S.settings.cpt=S.settings.cpt||{},fr=cp.frac=cp.frac||{};fr.done=fr.done||[];fr.adds=fr.adds||[];fr.done.push(el.dataset.id);
@@ -838,7 +871,7 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   else if(a==="setback"){S.setPage=null;S.confirm=null;render();window.scrollTo(0,0)}
   else if(a==="resetrules"){if(S.confirm!=="reset"){S.confirm="reset";render();return}S.confirm=null;var dd=defaultSettings("");S.settings.regles=dd.regles;S.settings.comptes=dd.comptes;saveSettings();render();toast("Valeurs des accords rétablies")}
   else if(a==="preview"){S.preview=!S.preview;render()}
-  else if(a==="verif"){S.verif=!S.verif;S.vres=null;render()}
+  else if(a==="verif"){S.verif=!S.verif;S.vres=null;S.sres=null;render()}
   else if(a==="vrun"){runVerif()}
   else if(a==="vopen"){var wasOpen=el.dataset.open==="1";S.vopen=wasOpen?"none":el.dataset.k;render()}
   else if(a==="vcopy"){var mtx=verifMsg(el.dataset.k);try{navigator.clipboard.writeText(mtx).then(function(){toast("Message copié")},function(){toast("Copie impossible")})}catch(x){toast("Copie impossible")}}
@@ -882,6 +915,7 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
 });
 function selectCode(el){var c=el.parentNode.querySelector("code");if(!c)return;var r=document.createRange();r.selectNodeContents(c);var s=getSelection();s.removeAllRanges();s.addRange(r);toast("Texte sélectionné : copie-le")}
 app.addEventListener("change",function(e){var el=e.target,a=el.dataset.act;if(!a)return;var w=week();
+  if(a==="cetsrc"){S.cetSrc=el.value;render();return}
   if(a==="dtype"){var di=+el.dataset.i,v0=el.value,od=w.days[di]||{},nd;
     if(v0==="")nd={x:od.x||{},noFerie:!!ferieOf(dayDate(S.cur,di))};else if(v0==="perso")nd={type:"perso",team:od.team||"Matin",start:od.start!=null?od.start:360,end:od.end!=null?od.end:795,pause:od.pause||0,theo:420,x:od.x||{}};
     else if(ABS[v0])nd={type:v0,x:od.x||{}};else nd=applySched(di,v0.slice(4));
@@ -1115,8 +1149,10 @@ function compareCompta(w,st,P){var c=weekCalc(w,st),items=[],info=[];
     Object.keys(pd.abs).forEach(function(k){var cat=COMPTA[k]||k;aB[cat]=(aB[cat]||0)+pd.abs[k]});
     Object.keys(Object.assign({},aA,aB)).forEach(function(cat){items.push({l:dn+" · "+cat.toLowerCase(),a:aA[cat]?hm(aA[cat]):"—",b:aB[cat]?hm(aB[cat]):"—",ok:eq(aA[cat],aB[cat]),an:aA[cat]||0,bn:aB[cat]||0,s:cat==="Férié"?1:-1})})}
   var hs=c.hs+c.samedi,ev=P.evp,i2=0,hasI2=false;P.days.forEach(function(d){if(d.ind.I2!=null){hasI2=true;i2+=d.ind.I2}});
-  var cHs=hasI2?i2:(ev.R125!=null||ev.R150!=null)?Math.round((ev.R125||0)/1.25+(ev.R150||0)/1.5):(P.ec?P.ec.tot:null);
-  if(cHs!=null)items.push({l:"Heures sup de la semaine",a:hm(hs),b:hm(cHs),ok:eq(hs,cHs,hasI2?1:2),an:hs,bn:cHs,s:1,w:1});
+  var paid=(ev.R125!=null||ev.R150!=null)?Math.round((ev.R125||0)/1.25+(ev.R150||0)/1.5):null,part=c.recupH+c.congeH,pres=c.pres+c.samedi;
+  if(paid!=null)items.push({l:"Heures sup payées",a:hm(hs),b:hm(paid),ok:eq(hs,paid,2),an:hs,bn:paid,s:1,w:1});
+  if(hasI2&&(paid==null||part))items.push({l:part?"Présence au-delà de 35 h, récup comprise":"Heures sup de la semaine",a:hm(part?pres:hs),b:hm(i2),ok:eq(part?pres:hs,i2,1),an:part?pres:hs,bn:i2,s:1,w:1});
+  if(paid==null&&!hasI2&&P.ec)items.push({l:"Heures sup de la semaine",a:hm(hs),b:hm(P.ec.tot),ok:eq(hs,P.ec.tot,2),an:hs,bn:P.ec.tot,s:1,w:1});
   items.push({l:"Heures sup majorées 125 %",a:hm(Math.floor(c.hs1*1.25)),b:hm(ev.R125||0),ok:eq(c.hs1*1.25,ev.R125||0,1),an:c.hs1*1.25,bn:ev.R125||0,s:1,w:1});
   if(c.hs2||ev.R150)items.push({l:"Heures sup majorées 150 %",a:hm(Math.floor(c.hs2*1.5)),b:hm(ev.R150||0),ok:eq(c.hs2*1.5,ev.R150||0,1),an:c.hs2*1.5,bn:ev.R150||0,s:1,w:1});
   items.push({l:"Primes de panier",a:String(c.panier),b:String(ev.PANIE||0),ok:c.panier===(ev.PANIE||0),an:c.panier,bn:ev.PANIE||0,s:1,w:1});
@@ -1127,8 +1163,47 @@ function compareCompta(w,st,P){var c=weekCalc(w,st),items=[],info=[];
   P.days.forEach(function(d){Object.keys(d.abs).forEach(function(k){if(!COMPTA[k]&&info.indexOf(k)<0)info.push(k+" (code d'absence inconnu)")})});
   var now=new Date();
   return{at:fmtD(now)+"/"+now.getFullYear()+" à "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0"),bad:items.filter(function(x){return!x.ok}).length,items:items,info:info}}
-function runVerif(){var ta=document.getElementById("vtxt"),P=parseCompta(ta?ta.value:"");S.vres=[];
-  if(!P.length){toast("Aucune semaine reconnue : copie toute la page (Ctrl+A puis Ctrl+C)");return}
+var SOLDE_MAP=[[/^TOT/i,null],[/cours d.?acquisition/i,"cpacq"],[/5.{0,4}me semaine/i,"c5"],[/fractionn/i,"frac"],[/anciennet/i,"anc"],[/suppl/i,"csup"],[/^Cong.s pay.s acquis/i,"cp"],[/r.cup.rer/i,"recup"],[/\bCET\b|.pargne/i,"cet"]];
+function parseSoldes(txt){txt=String(txt).replace(/\r/g,"").replace(/\u00a0/g," ");if(!/R.capitulatif des soldes/i.test(txt))return null;
+  var dm=txt.match(/Du\s+\d{2}\/\d{2}\/\d{4}\s+au\s+(\d{2})\/(\d{2})\/(\d{4})/)||txt.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(!dm)return null;
+  var out={date:new Date(+dm[3],+dm[2]-1,+dm[1]),rows:{}};
+  txt.split("\n").forEach(function(l){var c=l.indexOf("\t")>=0?l.split("\t"):l.split(/\s{2,}/);var lab=(c[0]||"").trim();if(!lab||c.length<2)return;
+    var k=null;for(var i=0;i<SOLDE_MAP.length;i++)if(SOLDE_MAP[i][0].test(lab)){k=SOLDE_MAP[i][1];break}if(!k||out.rows[k])return;
+    var v=c.slice(1,5).map(function(x){x=String(x||"").trim();if(!x)return null;if(x.indexOf(":")>0)return toMin(x);var f=parseFloat(x.replace(",","."));return isNaN(f)?null:f});
+    if(v.every(function(x){return x==null}))return;out.rows[k]={lab:lab,acq:v[0],pris:v[1],prevu:v[2],solde:v[3]}});
+  return Object.keys(out.rows).length?out:null}
+function compareSoldes(P){var st=S.settings,cn=counters(st,S.weeks,P.date),items=[],info=[],td=ymdStr(P.date),late=[];
+  ["recup","cp","c5","frac","anc","csup"].forEach(function(k){var r=P.rows[k],o=cn[k];if(!r){if(o.acq||o.pris||o.prevu)info.push(o.n);return}
+    if(o.ref>td)late.push(o.n);
+    var H=o.u==="h",f=function(v){return H?hm(v):fmtJ(v)+" j"},tol=H?1:0.01,isR=k==="recup",n=o.n.replace(/ \(4 semaines\)/,"");
+    var rs=[["acquis",o.acq,r.acq||0,1],["pris",o.pris,r.pris||0,-1]];if(!isR||r.prevu!=null)rs.push(["prévu",o.prevu,r.prevu||0,-1]);
+    var sa=isR&&r.prevu==null?o.dispo:o.reste,sb=r.solde!=null?r.solde:(r.acq||0)-(r.pris||0)-(r.prevu||0);
+    var onlyPrev=true;rs.forEach(function(x){var ok=Math.abs(x[1]-x[2])<=tol;if(ok)return;var it={l:n+" · "+x[0],a:f(x[1]),b:f(x[2]),ok:false,an:x[1],bn:x[2],s:x[3]};
+      if(x[0]==="prévu")it.hint=x[2]>x[1]?"pas encore posé dans l'appli":"posé dans l'appli, pas à la compta";else onlyPrev=false;items.push(it)});
+    var so={l:n+" · solde",a:f(sa),b:f(sb),ok:Math.abs(sa-sb)<=tol,an:sa,bn:sb,s:1};if(!so.ok&&onlyPrev&&rs.length>2&&Math.abs(o.prevu-(r.prevu||0))>tol)so.hint="vient du prévu";items.push(so)});
+  if(P.rows.cpacq){var a=st.cpt&&st.cpt.cpacq,b=P.rows.cpacq.acq||P.rows.cpacq.solde||0;items.push({l:"CP en cours d'acquisition",a:a!=null?hm(a):"—",b:hm(b),ok:a!=null&&Math.abs(a-b)<=1,an:a||0,bn:b,s:1})}
+  if(P.rows.cet){var r=P.rows.cet,b2=r.solde!=null?r.solde:(r.acq||0)-(r.pris||0);items.push({l:"CET · solde",a:hm(cn.cet.solde),b:hm(b2),ok:Math.abs(cn.cet.solde-b2)<=1,an:cn.cet.solde,bn:b2,s:1})}
+  else if(cn.cet.solde)info.push("CET");
+  items.forEach(function(x){if(!x.ok&&!x.hint)x.fav=((x.bn-x.an)*x.s)>0?1:-1});
+  return{date:td,items:items,bad:items.filter(function(x){return!x.ok}).length,info:info,late:late}}
+function recalSoldes(){var P=S.sres&&S.sres.P;if(!P)return;addSnap("Avant recalage sur la compta",true);
+  var cp=S.settings.cpt=S.settings.cpt||{},d=P.date,ds=ymdStr(d),T=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
+  Object.keys(P.rows).forEach(function(k){var r=P.rows[k],old=cp[k]||{};
+    if(k==="cpacq"){cp.cpacq=r.acq!=null?r.acq:r.solde;return}
+    if(k==="cet"){var ce=cp.cet=cp.cet||{moves:[]};ce.solde=r.solde!=null?r.solde:(r.acq||0)-(r.pris||0);ce.ref=ds;ce.refT=T;return}
+    if(k==="recup"){cp.recup={year:d.getFullYear(),acq:r.acq||0,pris:r.pris||0,ref:ds,refT:T,from:keyOf(mondayOf(d))};return}
+    var per=cpPeriod(d).a,adds=(old.adds||[]).filter(function(x){return x.per===per}),acq=r.acq||0;if(k==="frac")acq-=adds.reduce(function(s,x){return s+(+x.min||0)},0);
+    cp[k]={per:per,acq:acq,pris:r.pris||0,ref:ds,refT:T,adds:old.adds,done:old.done}});
+  saveSettings();S.sres.res=compareSoldes(P);render();toast("Compteurs recalés sur la compta du "+fmtD(d))}
+function soldesCard(){var x=S.sres.res,d=x.date.split("-").reverse().join("/");
+  var h='<div class="vres"><div class="vhd '+(x.bad?'ko':'ok')+'"><span>Soldes au '+d+'</span><span>'+(x.bad?'✗ '+x.bad+' écart'+(x.bad>1?'s':''):'✓ tout correspond')+'</span></div>'+
+    '<table class="vtab"><tr><th>Élément</th><th>Appli</th><th>Compta</th><th></th></tr>'+x.items.map(function(y){return'<tr class="'+(y.ok?'':'bad')+'"><td>'+esc(y.l)+(y.fav||y.hint?'<br><small style="font-weight:600">'+(y.hint?esc(y.hint):y.fav>0?'en ta faveur':'en ta défaveur')+'</small>':'')+'</td><td>'+esc(y.a)+'</td><td>'+esc(y.b)+'</td><td>'+(y.ok?'✓':'✗')+'</td></tr>'}).join("")+'</table>'+
+    '<div class="tiny" style="padding:6px 10px">Acquis, pris et prévu ne sont affichés qu\'en cas d\'écart.'+(x.info.length?' Absent du récapitulatif, non vérifié : '+esc(x.info.join(", "))+'.':'')+(x.late.length?' Attention : '+esc(x.late.join(", "))+' corrigé'+(x.late.length>1?'s':'')+' après le '+d+', colle un récapitulatif plus récent.':'')+'</div>';
+  if(x.bad)h+='<div class="pad"><div class="tiny" style="margin-bottom:8px">Si la compta a raison, recale tes compteurs sur ses chiffres. Une sauvegarde est faite avant.</div><button class="btn small primary" data-act="srecal" style="width:100%">Recaler mes compteurs sur la compta</button></div>';
+  return h+'</div>'}
+function runVerif(){var ta=document.getElementById("vtxt"),txt=ta?ta.value:"",SP=parseSoldes(txt),P=SP?[]:parseCompta(txt);S.vres=[];S.sres=null;
+  if(SP){S.sres={P:SP,res:compareSoldes(SP)};S.vtxt="";render();toast("Soldes vérifiés");return}
+  if(!P.length){toast("Rien de reconnu : copie toute la page (Ctrl+A puis Ctrl+C)");return}
   P.forEach(function(p){var w=S.weeks[p.key];if(!w||!(w.days||[]).some(function(d){return d&&d.type})){S.vres.push({key:p.key,missing:true});return}
     w.check=compareCompta(w,S.settings,p);saveWeek(p.key);S.vres.push({key:p.key})});
   S.vtxt="";S.vopen=null;render();toast(P.length+" semaine(s) vérifiée(s)")}
@@ -1142,8 +1217,9 @@ function verifCard(k){var w=S.weeks[k],ch=w.check,open=S.vopen?S.vopen===k:(!S.v
     if(ch.bad){var st=S.settings,to=mailList(st.mails.paye),subj="Écart de pointage semaine "+(+k.slice(6))+(st.profil.nom?" – "+st.profil.nom:"");
       h+='<div class="pad"><div class="vmsg">'+esc(verifMsg(k))+'</div><div class="btns"><button class="btn small primary" data-act="vcopy" data-k="'+k+'">Copier le message</button><a class="btn small" style="text-align:center;text-decoration:none" href="'+esc("ms-outlook://compose?to="+to.map(encodeURIComponent).join(";")+"&subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(verifMsg(k)))+'">Ouvrir Outlook</a></div></div>'}}
   return h+'</div>'}
-function viewVerif(){var out='<div class="card pad vbox"><b style="font-size:17px">Vérifier avec la compta</b><div class="tiny">Dans le logiciel de la compta, ouvre la semaine, fais <b>Ctrl+A</b> puis <b>Ctrl+C</b>, et colle ici. Tu peux coller plusieurs semaines à la suite.</div>'+
+function viewVerif(){var out='<div class="card pad vbox"><b style="font-size:17px">Vérifier avec la compta</b><div class="tiny">Dans le logiciel de la compta, ouvre la semaine <b>ou</b> le récapitulatif des soldes, fais <b>Ctrl+A</b> puis <b>Ctrl+C</b>, et colle ici. L\'appli reconnaît seule ce que tu as collé. Tu peux coller plusieurs semaines à la suite.</div>'+
     '<textarea id="vtxt" data-act="vtxt" placeholder="Colle ici la page de la compta…">'+esc(S.vtxt||"")+'</textarea><button class="btn primary" data-act="vrun">Vérifier</button></div>';
+  if(S.sres)return out+'<div class="card" style="overflow:hidden">'+soldesCard()+'</div>';
   var keys=(S.vres||[]).map(function(r){return r.key});if(!keys.length&&week().check)keys=[S.cur];
   (S.vres||[]).filter(function(r){return r.missing}).forEach(function(r){out+='<div class="remind on"><b>S'+(+r.key.slice(6))+' : semaine vide dans l\'appli</b><span>Saisis-la d\'abord, puis vérifie à nouveau.</span></div>'});
   keys.filter(function(k){return S.weeks[k]&&S.weeks[k].check}).forEach(function(k){out+=verifCard(k)});
