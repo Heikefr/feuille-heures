@@ -1,4 +1,4 @@
-/* EXCEL — exports au format Excel, avec la bibliothèque ExcelJS (chargée depuis un CDN, version fixe).
+/* EXCEL — exports au format Excel, avec la bibliothèque ExcelJS (chargée à la demande depuis un CDN, version fixe).
  */
 import { CONGE_H, CONGE_J, DAYN, EXTRAS, fmtD, isWork, monOfKey, weekCalc } from "./calculs.js";
 import { soldeCalc } from "./compteurs.js";
@@ -9,10 +9,46 @@ import { BCOLS, MOIS, bilanData } from "./ecran-bilan.js";
 import { subject } from "./ecran-envoi.js";
 import { render } from "./ecran-rendu.js";
 
+/** Adresse de la bibliothèque ExcelJS (version fixe). La même adresse est gardée hors ligne par sw.js. */
+const EXCEL_URL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
+
+/** Chargement en cours ou terminé (pour ne jamais charger deux fois). */
+let chargement = null;
+
+/**
+ * Charge ExcelJS si ce n'est pas déjà fait.
+ * Avant la 1.0, cette bibliothèque (environ 1 Mo) était chargée à chaque ouverture de l'appli et bloquait
+ * l'affichage quand le réseau était lent, alors qu'elle ne sert qu'aux exports.
+ * @returns {Promise<boolean>} false si le chargement a échoué (pas de réseau et pas encore en cache).
+ */
+function chargerExcel() {
+  if (typeof ExcelJS !== "undefined") return Promise.resolve(true);
+  if (!chargement) {
+    chargement = new Promise(function (resolve) {
+      const script = document.createElement("script");
+      script.src = EXCEL_URL;
+      script.onload = function () { resolve(true); };
+      // En cas d'échec, on oublie la tentative pour pouvoir réessayer au prochain export.
+      script.onerror = function () { chargement = null; script.remove(); resolve(false); };
+      document.head.appendChild(script);
+    });
+  }
+  return chargement;
+}
+
+/**
+ * Charge ExcelJS en tâche de fond, quelques secondes après le démarrage.
+ * But : que l'export soit immédiat au moment du clic. Sur iPhone, la feuille de partage ne s'ouvre
+ * que juste après un geste de l'utilisateur ; un téléchargement trop long entre les deux la bloquerait.
+ */
+function prechargerExcel() {
+  setTimeout(function () { if (navigator.onLine !== false) chargerExcel(); }, 4000);
+}
+
 /** Exporte le bilan de l'année affichée (un mois par ligne). */
 async function bilanExport() {
-  if (typeof ExcelJS === "undefined") {
-    toast("Le module Excel n'a pas chargé. Recharge la page.");
+  if (!(await chargerExcel())) {
+    toast("Le module Excel n'a pas pu être chargé. Vérifie le réseau puis réessaie.");
     return;
   }
   var y = S.by || TODAY.getFullYear(), B = bilanData(y), st = S.settings, wb = new ExcelJS.Workbook(), ws = wb.addWorksheet("Bilan " + y);
@@ -52,8 +88,8 @@ async function bilanExport() {
  * @param {boolean} validate Ancien paramètre (valider la semaine après l'export) ; toujours false aujourd'hui.
  */
 async function doExport(validate) {
-  if (typeof ExcelJS === "undefined") {
-    toast("Le module Excel n'a pas chargé. Recharge la page.");
+  if (!(await chargerExcel())) {
+    toast("Le module Excel n'a pas pu être chargé. Vérifie le réseau puis réessaie.");
     return;
   }
   var w = week(), st = S.settings, c = weekCalc(w, st), mon = monOfKey(S.cur), now = /* @__PURE__ */ new Date();
@@ -278,4 +314,4 @@ async function buildXlsx(w, c, mon, st, sentAt, soldeApres) {
   ws.getCell(r, 1).font = { italic: true, color: { argb: "FF5B6876" } };
   return await wb.xlsx.writeBuffer();
 }
-export { bilanExport, doExport };
+export { bilanExport, doExport, prechargerExcel };

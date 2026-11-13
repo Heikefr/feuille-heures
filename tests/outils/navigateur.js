@@ -12,6 +12,14 @@
 "use strict";
 const { chromium } = require("playwright");
 
+/** Adresse de la bibliothèque Excel utilisée par l'appli. */
+const EXCEL_URL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
+/**
+ * Copie locale de cette bibliothèque (installée par « npm install »), ou null si elle n'est pas là.
+ * Les tests coupent Internet : quand la copie existe, c'est elle qui est servie à la place du CDN.
+ */
+const EXCEL_LOCAL = (() => { try { return require.resolve("exceljs/dist/exceljs.min.js"); } catch (e) { return null; } })();
+
 /** « Aujourd'hui » pour tous les tests. */
 const MAINTENANT = new Date("2026-11-13T10:00:00+01:00");
 
@@ -71,7 +79,12 @@ async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "lig
   });
   const page = await contexte.newPage();
   // Tout ce qui n'est pas notre serveur local est coupé (polices, CDN, synchro).
-  await page.route("**/*", (route) => (route.request().url().startsWith(new URL(adresse).origin) ? route.continue() : route.abort()));
+  await page.route("**/*", (route) => {
+    const url = route.request().url();
+    if (url.startsWith(new URL(adresse).origin)) return route.continue();
+    if (url === EXCEL_URL && EXCEL_LOCAL) return route.fulfill({ path: EXCEL_LOCAL, contentType: "text/javascript" });
+    return route.abort();
+  });
   await page.clock.setFixedTime(MAINTENANT);
   const stockage = {};
   if (donnees) {
@@ -93,4 +106,4 @@ async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "lig
   return page;
 }
 
-module.exports = { lancer, ouvrir, MAINTENANT, ECRANS, CLE_DONNEES };
+module.exports = { lancer, ouvrir, MAINTENANT, ECRANS, CLE_DONNEES, EXCEL_LOCAL };

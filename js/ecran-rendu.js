@@ -10,6 +10,7 @@ import { S, TODAY, VERSION, app, week } from "./etat.js";
 import { ICON, esc, fmtJ } from "./outils.js";
 import { applyTheme, loadLocal, migrate } from "./stockage.js";
 import { SY, syncConnect, syncLabel, syncNow } from "./synchro.js";
+import { prechargerExcel } from "./excel.js";
 import { viewRescue } from "./secours.js";
 import { surveillerMisesAJour } from "./mise-a-jour.js";
 import { viewBilan } from "./ecran-bilan.js";
@@ -24,6 +25,9 @@ function boot() {
   migrate();
   applyTheme();
   S.ready = true;
+  // Hors ligne / mises à jour, et module Excel en tâche de fond : dans tous les cas, y compris l'ouverture par lien de connexion.
+  surveillerMisesAJour();
+  prechargerExcel();
   try {
     var q = new URLSearchParams(location.search);
     if (!S.readErr && q.get("api") && q.get("cle")) {
@@ -39,7 +43,6 @@ function boot() {
   }
   render();
   syncNow();
-  surveillerMisesAJour();
 }
 
 /** Redessine toute l'appli d'après l'état S. Conserve la position de défilement et le champ en cours de saisie. */
