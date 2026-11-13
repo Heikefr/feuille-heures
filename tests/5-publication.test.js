@@ -45,3 +45,10 @@ test("le cache hors ligne (sw.js) contient tous les fichiers de l'appli", () => 
   // Et rien d'inexistant dans la liste.
   for (const m of sw.matchAll(/"\.\/([^"]+)"/g)) assert.ok(existe(m[1]), `sw.js cite ${m[1]}, qui n'existe pas`);
 });
+
+test("le numéro de publication est le même dans sw.js et dans js/etat.js", () => {
+  const dansSw = (lire("sw.js").match(/const BUILD = "([^"]+)"/) || [])[1];
+  const dansAppli = (lire("js/etat.js").match(/var BUILD="([^"]+)"/) || [])[1];
+  assert.ok(dansSw, "BUILD introuvable dans sw.js");
+  assert.equal(dansAppli, dansSw, "BUILD doit être changé aux deux endroits à chaque publication");
+});

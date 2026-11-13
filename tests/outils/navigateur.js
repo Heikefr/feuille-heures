@@ -54,18 +54,20 @@ function lancer() {
  * @param {object} options.donnees   Contenu du stockage (format d'une sauvegarde).
  * @param {"iphone"|"etroit"|"pc"} [options.ecran="pc"]
  * @param {"light"|"dark"} [options.theme="light"]  Thème forcé dans les réglages.
+ * @param {boolean} [options.horsLigne=false]    Vrai pour laisser l'appli installer son fonctionnement hors ligne (sw.js).
+ *                                                Faux partout ailleurs : les autres tests veulent des fichiers toujours frais.
  * @param {Object<string,string>} [options.brut]   Clés de stockage à écrire telles quelles, en plus ou à la place des données
  *                                                (sert à simuler des données abîmées, des sauvegardes, une synchro configurée).
  * @returns {Promise<import("playwright").Page>} Page prête, appli affichée.
  */
-async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "light", brut = {} }) {
+async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "light", brut = {}, horsLigne = false }) {
   const contexte = await navigateur.newContext({
     ...ECRANS[ecran],
     locale: "fr-FR",
     timezoneId: "Europe/Paris",
     colorScheme: theme,
     reducedMotion: "reduce",
-    serviceWorkers: "block",
+    serviceWorkers: horsLigne ? "allow" : "block",
   });
   const page = await contexte.newPage();
   // Tout ce qui n'est pas notre serveur local est coupé (polices, CDN, synchro).

@@ -6,6 +6,7 @@ import { ICON, esc, fmtJ } from "./outils.js";
 import { applyTheme, loadLocal, migrate } from "./stockage.js";
 import { SY, syncConnect, syncLabel, syncNow } from "./synchro.js";
 import { viewRescue } from "./secours.js";
+import { surveillerMisesAJour } from "./mise-a-jour.js";
 import { prefillFeries, viewSheet, viewWeek, viewYear, weekStatus } from "./ecran-semaine.js";
 import { viewSend } from "./ecran-envoi.js";
 import { reminders, viewBank } from "./ecran-compteurs.js";
@@ -16,7 +17,7 @@ function boot(){
   loadLocal();migrate();applyTheme();S.ready=true;
   try{var q=new URLSearchParams(location.search);if(!S.readErr&&q.get("api")&&q.get("cle")){var qa=q.get("api"),qc=q.get("cle");history.replaceState(null,"",location.pathname);S.tab="set";S.setPage="sync";render();syncConnect(qa,qc);return}}catch(e){}
   render();syncNow();
-  if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)navigator.serviceWorker.register("sw.js").catch(function(){});
+  surveillerMisesAJour();
 }
 /* ----- Rendu ----- */
 function render(){S.defer=false;

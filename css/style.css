@@ -389,3 +389,5 @@ main.dbody{padding:16px 22px 30px}
 .ios-h{font-size:24px;font-weight:700;margin:0 2px}
 .reset{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;color:var(--warn);font-weight:700;font-size:15px}
 .reset.primary{background:var(--warn);color:#fff}
+/* bandeau « Nouvelle version prête » (js/mise-a-jour.js) */
+.majbar{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:8px 14px;background:var(--ok-bg);color:var(--ok);font-size:14px;font-weight:600;border-bottom:1px solid var(--line)}
