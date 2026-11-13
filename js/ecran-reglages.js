@@ -119,7 +119,7 @@ function viewSettings() {
   if (pg === "save") out += viewSnaps().replace("<h2>Sauvegardes</h2>", "");
   if (pg === "news") out += '<div class="card">' + CHANGELOG.map(function(c, i) {
     return '<details style="border:0;border-bottom:1px solid var(--line);border-radius:0;background:none"' + (i === 0 ? " open" : "")
-        + "><summary>Version " + c[0] + " bêta" + (c[0] === VERSION ? ' <span class="chip sent">Installée</span>' : "")
+        + "><summary>Version " + c[0] + (c[0].indexOf("0.") === 0 ? " bêta" : "") + (c[0] === VERSION ? ' <span class="chip sent">Installée</span>' : "")
         + ' <span class="tiny">· ' + c[1] + '</span></summary><ul style="margin:0 0 12px;padding:0 14px 0 32px;font-size:14px;color:var(--muted)">'
         + c[2].map(function(x) {
       return "<li>" + esc(x) + "</li>";

@@ -33,3 +33,33 @@ Ensuite, chaque modification part toute seule, et chaque appareil récupère les
 - Si la même semaine est modifiée sur les deux appareils, c'est la dernière modification qui gagne.
 - Le code d'accès et l'adresse sont des secrets : ne les partage pas. Pour changer de code, dans Apps Script : **Paramètres du projet > Propriétés du script**, supprime `cle`, relance **installer**, puis reconnecte les appareils.
 - Une sauvegarde automatique est créée dans l'appli juste avant la première connexion.
+
+## Organisation du code (depuis la 1.0)
+
+L'appli est servie telle quelle par GitHub Pages, sans étape de compilation.
+
+| Fichier | Rôle |
+| --- | --- |
+| `index.html` | Structure de la page |
+| `css/style.css` | Mise en forme (iPhone, PC, thèmes clair et sombre) |
+| `js/calculs.js`, `js/compteurs.js` | Règles de calcul (heures, heures sup, nuit, primes, samedi) et compteurs |
+| `js/fiche.js` | La fiche envoyée au service paye, dessinée en image |
+| `js/compta.js` | Vérification avec la compta par copier-coller |
+| `js/stockage.js`, `js/sauvegardes.js`, `js/secours.js` | Données de l'appareil, sauvegardes, mode secours |
+| `js/synchro.js` | Échanges avec le Google Sheet |
+| `js/ecran-*.js`, `js/actions.js` | Écrans et gestes |
+| `js/appareil.js`, `js/accessibilite.js`, `js/mise-a-jour.js`, `js/excel.js`, `js/outils.js`, `js/etat.js` | Préférences de l'appareil, clavier et lecteur d'écran, mises à jour, exports, fonctions communes, état |
+| `sw.js` | Fonctionnement hors ligne |
+| `Code.gs` | Script Google Apps Script de synchronisation (à coller dans le Sheet, voir plus haut) |
+| `tests/` | Tests automatiques (voir `tests/README.md`) |
+
+Le format des données et le dialogue avec `Code.gs` sont ceux de la 0.10 : rien à reconnecter ni à redéployer.
+
+## Publier une nouvelle version
+
+1. Changer `BUILD` dans `sw.js` **et** dans `js/etat.js` (même valeur), et `VERSION` + `CHANGELOG` dans `js/etat.js`.
+2. Si un fichier a été ajouté dans `js/` ou `css/`, l'ajouter à la liste `FICHIERS` de `sw.js`.
+3. Envoyer le code sur une branche : GitHub lance les tests. Une fois verts, fusionner dans `main`.
+4. GitHub relance les tests sur `main` puis met le site en ligne. Un test rouge bloque la publication.
+
+Sur chaque appareil, la nouvelle version s'installe en arrière-plan et le bandeau « Nouvelle version prête » propose de recharger.

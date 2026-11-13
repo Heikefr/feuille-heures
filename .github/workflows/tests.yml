@@ -6,6 +6,10 @@
 #   3. lancer tous les tests du dossier tests/ : calculs, compteurs, compta, fiche, écrans iPhone et PC.
 # Si un test échoue, les images « avant / après » du jeu de données inventé sont jointes au rapport.
 #
+# PUBLICATION : quand le code arrive sur la branche main ET que tous les tests passent, le site est publié
+# sur GitHub Pages (seconde tâche, « publier »). Un test rouge bloque donc la mise en ligne.
+# Réglage nécessaire, une fois : Settings › Pages › Source = « GitHub Actions ».
+#
 # Les vraies données (historique, relevés) ne sont pas dans le dépôt : elles arrivent par le secret
 # FH_DONNEES_PRIVEES (Settings › Secrets and variables › Actions). Sans ce secret, seuls les tests
 # sur les données inventées tournent. Rien de personnel n'est écrit dans le journal ni dans les pièces jointes.
@@ -67,3 +71,34 @@ jobs:
           path: tests/resultats/
           if-no-files-found: ignore
           retention-days: 14
+
+  publier:
+    name: Publier sur GitHub Pages
+    # Seulement pour la branche main, et seulement si la tâche « tests » a réussi.
+    needs: tests
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      # Seuls les fichiers de l'appli sont publiés (pas les tests, ni le script Google, ni l'outillage).
+      - name: Rassembler les fichiers de l'appli
+        run: |
+          mkdir _site
+          cp -r index.html sw.js manifest.webmanifest icon-*.png js css _site/
+
+      - name: Préparer l'envoi
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Mettre en ligne
+        id: deploiement
+        uses: actions/deploy-pages@v4

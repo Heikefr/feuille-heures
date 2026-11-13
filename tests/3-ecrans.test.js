@@ -25,7 +25,9 @@ const { jeux } = require("./outils/donnees.js");
  * Clé : nom du scénario (ou « * » pour tous) ; valeur : la raison, en clair.
  * Vide tant que la refonte est « à l'identique ».
  */
-const CHANGEMENTS_VOULUS = {};
+const CHANGEMENTS_VOULUS = {
+  "reglages-news": "La page Nouveautés a une entrée de plus (version 1.0), et « bêta » n'est plus écrit que pour les versions 0.x.",
+};
 
 /* ---------- Gestes élémentaires ---------- */
 
@@ -85,6 +87,9 @@ async function photographier(page, scenario, ecran) {
   // la première colonne du Bilan perdait ou non ses bordures d'une page à l'autre. Sur une photo de la page entière,
   // « collé » ne veut rien dire : on le neutralise des deux côtés pour comparer ce qui compte.
   await page.addStyleTag({ content: ".btab th, .btab td { position: static !important; }" });
+  // Le numéro de version (menu PC, liste des réglages) diffère forcément de la 0.10 : on le masque des deux côtés.
+  // (Par une règle de style, qui survit aux réaffichages de l'appli, et non en modifiant le texte.)
+  await page.addStyleTag({ content: '.dfoot [data-p="news"], .irow[data-p="news"] em { visibility: hidden !important; }' });
   // La souris est rangée dans le coin : sinon l'élément resté sous le pointeur peut s'afficher « survolé ».
   await page.mouse.move(0, 0);
   // On attend que l'affichage soit posé : deux photos de suite doivent être identiques

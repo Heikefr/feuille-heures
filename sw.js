@@ -18,7 +18,7 @@
  */
 
 /** Numéro de la version publiée. Doit être identique à BUILD dans js/etat.js. */
-const BUILD = "2026-11-13.1";
+const BUILD = "1.0";
 
 /** Cache de cette version (un par version : l'ancien est supprimé quand la nouvelle prend la main). */
 const CACHE = "feuille-heures-" + BUILD;

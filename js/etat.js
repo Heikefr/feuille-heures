@@ -16,19 +16,29 @@
 import { defaultSettings, keyOf, mondayOf } from "./calculs.js";
 
 /** Numéro de version affiché à l'utilisateur (Réglages › Nouveautés, menu PC). */
-var VERSION = "0.10";
+var VERSION = "1.0";
 
 /**
  * Numéro de publication. Doit être identique à BUILD dans sw.js (vérifié par les tests) :
  * c'est son changement qui déclenche le bandeau « Nouvelle version prête ».
  */
-var BUILD = "2026-11-13.1";
+var BUILD = "1.0";
 
 /**
  * Journal des nouveautés, de la plus récente à la plus ancienne : [version, date, [lignes]].
  * Affiché dans Réglages › Nouveautés.
  */
-var CHANGELOG = [["0.10", "13/11/2026", ["Nouvel onglet Bilan : l'année mois par mois (heures travaillées, heures sup, nuit, primes, samedis, récup, congés, absences) et export Excel",
+var CHANGELOG = [["1.0", "13/11/2026", [
+    "L'appli sort de la bêta. Les calculs sont identiques à la minute près, la fiche envoyée est identique, et toutes tes données sont reprises telles quelles",
+    "Données mieux protégées : si elles deviennent illisibles, l'appli s'arrête sur un écran de secours (restaurer une sauvegarde, récupérer depuis le Google Sheet, exporter) au lieu de les écraser",
+    "Hors ligne plus fiable : une nouvelle version s'installe d'un bloc et s'annonce par le bandeau « Nouvelle version prête »",
+    "Démarrage plus rapide sur réseau faible : le module Excel n'est plus chargé à l'ouverture",
+    "Écran d'envoi : alerte quand des lignes d'observation ne tiennent pas sur la fiche (6 au plus)",
+    "Synchro : si une version d'ici est remplacée par celle, plus récente, d'un autre appareil, elle est gardée dans les sauvegardes et un bandeau le signale",
+    "Thème et taille de la fiche : propres à chaque appareil, ils ne sont plus synchronisés",
+    "Clavier et lecteur d'écran : Échap ferme les fenêtres, l'état des semaines est annoncé en toutes lettres",
+    "Sous le capot : code réorganisé en modules et commenté, tests automatiques avant chaque publication"]],
+    ["0.10", "13/11/2026", ["Nouvel onglet Bilan : l'année mois par mois (heures travaillées, heures sup, nuit, primes, samedis, récup, congés, absences) et export Excel",
     "Coupures réseau : les modifications restent sur l'appareil, l'appli réessaie toute seule et les envoie dès le retour du réseau. L'état est affiché (« Hors ligne · 2 modif. en attente »)",
     "Plus rapide : l'aperçu de la fiche n'est redessiné que s'il change", "Données plus sûres : format numéroté, fichiers importés contrôlés, semaines illisibles écartées au lieu de bloquer l'appli"]],
     ["0.9", "13/11/2026", ["Envoi simplifié : un écran avec la fiche, les destinataires et un seul bouton « Copier la fiche et ouvrir Outlook ». La semaine n'est verrouillée qu'à ce moment-là",
