@@ -1,0 +1,62 @@
+# TESTS AUTOMATIQUES
+# ------------------
+# À chaque envoi de code sur GitHub (toutes les branches), ce fichier demande à GitHub de :
+#   1. récupérer le dépôt ;
+#   2. installer le navigateur de test (Chromium, piloté par Playwright) ;
+#   3. lancer tous les tests du dossier tests/ : calculs, compteurs, compta, fiche, écrans iPhone et PC.
+# Si un test échoue, les images « avant / après » du jeu de données inventé sont jointes au rapport.
+#
+# Les vraies données (historique, relevés) ne sont pas dans le dépôt : elles arrivent par le secret
+# FH_DONNEES_PRIVEES (Settings › Secrets and variables › Actions). Sans ce secret, seuls les tests
+# sur les données inventées tournent. Rien de personnel n'est écrit dans le journal ni dans les pièces jointes.
+
+name: Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# Un seul passage à la fois par branche : un nouvel envoi annule le précédent.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Calculs, fiche et écrans
+    # Version d'Ubuntu fixée : mêmes polices et même rendu d'une fois sur l'autre.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installer l'outillage de test (version fixée dans package.json)
+        run: npm install --no-audit --no-fund
+
+      - name: Installer le navigateur de test
+        run: npx playwright install --with-deps chromium
+
+      - name: Lancer les tests
+        env:
+          FH_DONNEES_PRIVEES: ${{ secrets.FH_DONNEES_PRIVEES }}
+        run: npm test
+
+      - name: Joindre les images en cas d'échec (données inventées uniquement)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultats-des-tests
+          path: tests/resultats/
+          if-no-files-found: ignore
+          retention-days: 14

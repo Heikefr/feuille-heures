@@ -1,0 +1,7 @@
+# Dépendances des tests (installées par « npm install », jamais publiées)
+node_modules/
+# Captures et rapports produits par les tests
+tests/resultats/
+# Données personnelles : ne doivent JAMAIS entrer dans le dépôt
+prive/
+*.prive.*

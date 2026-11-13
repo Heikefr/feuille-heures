@@ -1,0 +1,11 @@
+{
+  "name": "feuille-heures-tests",
+  "private": true,
+  "description": "Outillage de test uniquement. L'application elle-même n'a besoin d'aucune installation : elle est servie telle quelle par GitHub Pages.",
+  "scripts": {
+    "test": "TZ=Europe/Paris node --test --test-concurrency=1 \"tests/*.test.js\""
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
