@@ -5,3 +5,4 @@ tests/resultats/
 # Données personnelles : ne doivent JAMAIS entrer dans le dépôt
 prive/
 *.prive.*
+sortie-des-tests.txt

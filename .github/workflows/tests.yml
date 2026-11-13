@@ -50,7 +50,14 @@ jobs:
       - name: Lancer les tests
         env:
           FH_DONNEES_PRIVEES: ${{ secrets.FH_DONNEES_PRIVEES }}
-        run: npm test
+        # La sortie est gardée dans un fichier pour le rapport d'échec ; le code de retour reste celui des tests.
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee sortie-des-tests.txt
+
+      - name: Afficher les tests échoués sur la page de l'exécution
+        if: failure()
+        run: node tests/outils/rapport.js sortie-des-tests.txt
 
       - name: Joindre les images en cas d'échec (données inventées uniquement)
         if: failure()
