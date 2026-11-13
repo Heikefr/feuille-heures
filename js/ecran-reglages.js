@@ -76,4 +76,4 @@ function viewSnaps(){var a=getSnaps(),bk=lastFileBackup(),out='<h2>Sauvegardes</
     '<button class="btn small danger'+(cd?' primary':'')+'" data-act="snapdel" data-id="'+s.id+'" aria-label="Supprimer">'+(cd?'Supprimer ?':'✕')+'</button></div></div>'});
   out+='</div>';return out}
 
-export { SETP, SICON, setRow, viewSettings, rulesDefault, hin, viewSnaps };
+export { viewSettings };

@@ -1,24 +1,24 @@
 /* ACTIONS — réactions aux clics, saisies, gestes et raccourcis clavier. */
-import { ABS, dayDate, defaultSettings, ferieOf, hm, keyOf, mondayOf, schedFor, shiftKey, toMin, weekCalc } from "./calculs.js";
+import { ABS, dayDate, defaultSettings, ferieOf, hm, keyOf, mondayOf, schedFor, toMin, weekCalc } from "./calculs.js";
 import { cpPeriod } from "./compteurs.js";
 import { DMQ, S, TODAY, app, week } from "./etat.js";
 import { parseHM, selectCode, setPath, shareFile, toast } from "./outils.js";
 import { applyTheme, saveSettings, saveWeek } from "./stockage.js";
 import { SY, saveSync, syncConnect, syncNow } from "./synchro.js";
-import { addSnap, backup, delSnap, exportSnap, restore, restoreSnap } from "./sauvegardes.js";
-import { ficheBlob, sendHtml } from "./fiche.js";
+import { addSnap, delSnap, exportSnap, restore, restoreSnap } from "./sauvegardes.js";
+import { ficheBlob } from "./fiche.js";
 import { recalSoldes } from "./compta.js";
 import { bilanExport, doExport } from "./excel.js";
 import { KEY_RESCUE, rescueAct, rescueExport } from "./secours.js";
-import { applySched, poseConge, setDay } from "./ecran-semaine.js";
-import { sendGo } from "./ecran-envoi.js";
 import { exportIcs, saveCet, saveCounter, upcoming } from "./ecran-compteurs.js";
-import { runVerif, verifMsg } from "./ecran-verification.js";
+import { sendGo } from "./ecran-envoi.js";
 import { goWeek, render } from "./ecran-rendu.js";
+import { applySched, poseConge, setDay } from "./ecran-semaine.js";
+import { runVerif, verifMsg } from "./ecran-verification.js";
 
 app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");if(!el)return;var a=el.dataset.act;
   if(a==="close"&&e.target!==el)return;
-  if(["vtxt","dset","xset","xsel","sset","hset","obs","xsam","hfri","dtype","dpause","wnote","ynote","syncf","cfix"].indexOf(a)>=0)return;
+  if(["vtxt","dset","xset","xsel","sset","hset","obs","hfri","dtype","dpause","wnote","ynote","syncf","cfix"].indexOf(a)>=0)return;
   if(a==="ygo"&&S.lpFired){S.lpFired=false;return}
   if(a==="yclose"&&e.target!==el)return;
   if(S.readErr){rescueAct(a);return}
@@ -67,8 +67,6 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   else if(a==="vopen"){var wasOpen=el.dataset.open==="1";S.vopen=wasOpen?"none":el.dataset.k;render()}
   else if(a==="vcopy"){var mtx=verifMsg(el.dataset.k);try{navigator.clipboard.writeText(mtx).then(function(){toast("Message copié")},function(){toast("Copie impossible")})}catch(x){toast("Copie impossible")}}
   else if(a==="obsbtn"){S.showObs=!S.showObs;render();var o=document.getElementById("obs");if(o)o.focus()}
-  else if(a==="fixr"){S.fixR=true;render()}
-  else if(a==="fixc"){S.fixC=true;render()}
   else if(a==="wk"){goWeek(+el.dataset.n)}
   else if(a==="openday"){S.sheet=+el.dataset.i;render()}
   else if(a==="close"){S.sheet=null;render()}
@@ -79,11 +77,7 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
     else if(ABS[id])d={type:id,x:old.x||{}};else d=applySched(i,id);
     setDay(i,d);render()}
   else if(a==="fill"){var nf=0;for(var i=0;i<5;i++){var od=w.days[i]||{};if(od.type==="ferie"){nf++;continue}w.days[i]=applySched(i,el.dataset.id)}saveWeek();render();toast(nf?"Lundi à vendredi remplis (férié conservé)":"Lundi à vendredi remplis")}
-  else if(a==="copyprev"){var p=S.weeks[shiftKey(S.cur,-1)];if(!p){toast("Rien à copier dans la semaine précédente");return}
-    w.days=JSON.parse(JSON.stringify(p.days));saveWeek();render();toast("Semaine précédente copiée")}
   else if(a==="clear"){w.days=[{},{},{},{},{},{},{}];w.note="";saveWeek();render()}
-  else if(a==="sendhtml")sendHtml(true);
-  else if(a==="copyhtml")sendHtml(false);
   else if(a==="rsexport"){rescueExport()}
   else if(a==="rsforget"){if(S.confirm!=="rsforget"){S.confirm="rsforget";render();return}S.confirm=null;try{localStorage.removeItem(KEY_RESCUE)}catch(x){}render();toast("Données illisibles supprimées")}
   else if(a==="snapnew"){addSnap("Sauvegarde manuelle",false);render();toast("Sauvegarde créée dans l'appli")}
@@ -91,19 +85,10 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   else if(a==="snaprest"){if(S.confirm!=="r"+el.dataset.id){S.confirm="r"+el.dataset.id;render();return}S.confirm=null;restoreSnap(el.dataset.id)}
   else if(a==="snapdel"){if(S.confirm!=="d"+el.dataset.id){S.confirm="d"+el.dataset.id;render();return}S.confirm=null;delSnap(el.dataset.id);render();toast("Sauvegarde supprimée")}
   else if(a==="reopen"){w.validated=false;saveWeek();render()}
-  else if(a==="send"||a==="export")doExport(a==="send");
+  else if(a==="export")doExport(false);
   else if(a==="copy"){var v=el.dataset.v;if(!v)return;var done=function(){toast("Copié")};
     try{navigator.clipboard.writeText(v).then(done,function(){selectCode(el)})}catch(x){selectCode(el)}}
-  else if(a==="setsolde"){var raw=document.getElementById("c-val").value.trim(),neg=/^-/.test(raw),m=toMin(raw.replace(/^[-+]/,"").replace("h",":"));
-    if(m==null&&/^\d+$/.test(raw.replace(/^[-+]/,"")))m=+raw.replace(/^[-+]/,"")*60;
-    if(m==null){toast("Format attendu : 12:30");return}
-    S.settings.solde={min:neg?-m:m,from:document.getElementById("c-wk").value};S.fixR=false;saveSettings();render();toast("Compteur mis à jour")}
-  else if(a==="setconges"){var rh=document.getElementById("c-ch").value.trim(),mh=toMin(rh.replace(/^[-+]/,"").replace("h",":"));
-    if(mh==null&&/^\d+$/.test(rh.replace(/^[-+]/,"")))mh=+rh.replace(/^[-+]/,"")*60;
-    if(mh==null){toast("Format attendu : 175:00");return}
-    S.settings.conges={h:/^-/.test(rh)?-mh:mh,j:+document.getElementById("c-cj").value||0,from:document.getElementById("c-cwk").value};S.fixC=false;saveSettings();render();toast("Solde de congés mis à jour")}
   else if(a==="hadd"){S.settings.horaires.push({id:"h"+Date.now().toString(36),label:"",team:"Matin",start:360,end:795,pause:0,theo:420,fri:null});saveSettings();render()}
-  else if(a==="backup")backup();
   else if(a==="hdel"){S.settings.horaires.splice(+el.dataset.i,1);saveSettings();render()}
 });
 app.addEventListener("change",function(e){var el=e.target,a=el.dataset.act;if(!a)return;var w=week();
@@ -116,7 +101,6 @@ app.addEventListener("change",function(e){var el=e.target,a=el.dataset.act;if(!a
   if(a==="dset"){var d=w.days[el.dataset.i!=null?+el.dataset.i:S.sheet];var k=el.dataset.k;d[k]=k==="team"?el.value:toMin(el.value)||0;saveWeek();if(S.desk&&el.type==="time"&&document.activeElement===el){S.defer=true;return}render()}
   else if(a==="xset"){var d2=w.days[S.sheet]=w.days[S.sheet]||{};d2.x=d2.x||{};d2.x[el.dataset.k]=toMin(el.value)||0;saveWeek();render()}
   else if(a==="xsel"){var d4=w.days[S.sheet]=w.days[S.sheet]||{};d4.x=d4.x||{};d4.x[el.dataset.k]=el.value;saveWeek();render()}
-  else if(a==="xsam"){var d3=w.days[S.sheet]=w.days[S.sheet]||{};d3.x=d3.x||{};d3.x.sam=el.checked?1:0;saveWeek();render()}
   else if(a==="sset"){var v=el.dataset.bool?el.checked:el.dataset.time?(toMin(el.value)||0):el.type==="number"?(+el.value||0):el.value;setPath(S.settings,el.dataset.p,v);if(el.dataset.p==="theme")applyTheme();saveSettings();render()}
   else if(a==="hset"){var h=S.settings.horaires[+el.dataset.i];setPath(h,el.dataset.k,el.dataset.time?(toMin(el.value)||0):el.value);saveSettings();render()}
   else if(a==="hfri"){var h2=S.settings.horaires[+el.dataset.i];h2.fri=el.checked?{start:h2.start,end:h2.end,pause:h2.pause,theo:h2.theo}:null;saveSettings();render()}

@@ -7,8 +7,8 @@ import { saveWeek } from "./stockage.js";
 import { SY, pendingCount } from "./synchro.js";
 import { ficheCanvas, ficheURL } from "./fiche.js";
 import { fracCands, fracCard, viewReminders } from "./ecran-compteurs.js";
-import { viewVerif } from "./ecran-verification.js";
 import { deskRecap, deskSend } from "./ecran-rendu.js";
+import { viewVerif } from "./ecran-verification.js";
 
 /* ----- Fériés ----- */
 function prefillFeries(k){var w=week(k),ch=false;if(w.validated)return;
@@ -106,16 +106,7 @@ function viewYear(){var y=S.year,M=["Janvier","Février","Mars","Avril","Mai","J
     var nn=by[i].filter(function(k){return S.weeks[k]&&S.weeks[k].note}).map(function(k){return'S'+k.slice(6)+' · '+esc(S.weeks[k].note)});
     if(nn.length)out+='<div class="ynote">📌 '+nn.join(' — ')+'</div>'});
   return out+'</div></div>'}
-function summaryCard(c){var R=S.settings.regles,max=Math.max(R.seuil+R.palier,c.counted);
-  var p1=Math.min(c.counted,R.seuil)/max*100,p2=Math.max(0,c.counted-R.seuil)/max*100;
-  var s=soldeCalc(S.settings,S.weeks),w=week(),after=s.solde+(w.validated?0:c.net);
-  return'<div class="card sum"><div class="meter"><div class="meter-top"><b>'+hm(c.counted)+'</b><span>sur '+hm(R.seuil)+' · travaillées '+hm(c.worked)+'</span></div><div class="bar"><i class="b1" style="width:'+p1+'%"></i><i class="b2" style="width:'+p2+'%"></i></div></div>'+
-  '<div class="kv"><div><span>Heures sup</span><b>'+hm(c.hs)+'</b></div><div><span>Majoration HS</span><b>'+hm(c.majHs)+'</b></div>'+
-  '<div><span>Heures de nuit</span><b>'+hm(c.night)+'</b></div><div><span>Majoration nuit '+R.nuit+' %</span><b>'+hm(c.majNuit)+'</b></div>'+
-  (c.samedi?'<div><span>Samedi (tout en heures sup)</span><b>'+hm(c.samedi)+'</b></div><div><span>Majoration samedi '+R.samTaux+' %</span><b>'+hm(c.majSam)+'</b></div>':'')+
-  '<div><span>Primes panier / équipe</span><b>'+c.panier+'</b></div><div><span>Récup prise</span><b>'+hm(c.debit)+'</b></div>'+
-  '<div class="'+(c.net<0?'neg':'hl')+'"><span>Effet sur le compteur</span><b>'+hm(c.net,true)+'</b></div><div><span>Compteur '+(w.validated?'':'après envoi')+'</span><b>'+hm(after)+'</b></div></div>'+
-  '<div class="detail">'+(c.hs?'HS : '+hm(c.hs1)+' à '+R.taux1+' %'+(c.hs2?' + '+hm(c.hs2)+' à '+R.taux2+' %':'')+(c.recupMode?' → à récupérer.':' → à payer (hors compteur).')+' ':'')+(c.night?'Nuit : '+hm(c.night)+' majorées à '+R.nuit+' %. ':'')+(c.samedi?'Samedi : '+hm(c.samedi)+' hors seuil de '+hm(R.seuil)+', majorées à '+R.samTaux+' %'+(c.sam?', indemnité samedi 3006.':'.'):'')+'</div></div>'}
+
 function viewSheet(){var i=S.sheet,w=week(),d=w.days[i]||{},st=S.settings,mon=monOfKey(S.cur),dt=new Date(mon);dt.setDate(dt.getDate()+i);
   var g='<div class="grid-sched">';
   st.horaires.forEach(function(h){var s=schedFor(st,h.id,i),cl={Matin:"m",Soir:"s","Journée":"j"}[h.team]||"m";
@@ -148,4 +139,4 @@ function applySched(i,id){var s=schedFor(S.settings,id,i);var old=week().days[i]
 function poseConge(k,ty){var w=week(k);for(var i=0;i<5;i++){var d=w.days[i]||{};if(d.type==="ferie"||ferieOf(dayDate(k,i)))continue;w.days[i]={type:ty||"cp",x:{}}}if(!w.note)w.note="Congés";saveWeek(k)}
 function congeChooser(k){return'<div class="btns">'+["cp","c5","frac"].map(function(ty){var c=(S._cpt||{})[ty];return'<button class="btn small" data-act="poseconge" data-k="'+k+'" data-t="'+ty+'">'+ABS[ty]+(c?' <span class="tiny">reste '+hm(c.reste)+'</span>':'')+'</button>'}).join("")+'<button class="btn small ghost" data-act="pickno">Annuler</button></div>'}
 
-export { prefillFeries, selOptions, selClass, theoRange, isChanged, primes, viewWeek, weekStatus, viewYear, summaryCard, viewSheet, setDay, applySched, poseConge, congeChooser };
+export { prefillFeries, viewWeek, weekStatus, viewYear, viewSheet, setDay, applySched, poseConge };

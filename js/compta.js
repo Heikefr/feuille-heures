@@ -81,4 +81,4 @@ function recalSoldes(){var P=S.sres&&S.sres.P;if(!P)return;addSnap("Avant recala
     cp[k]={per:per,acq:acq,pris:r.pris||0,ref:ds,refT:T,adds:old.adds,done:old.done}});
   saveSettings();S.sres.res=compareSoldes(P);render();toast("Compteurs recalés sur la compta du "+fmtD(d))}
 
-export { COMPTA, COMPTA_INFO, appCat, parseCompta, compareCompta, SOLDE_MAP, parseSoldes, compareSoldes, recalSoldes };
+export { parseCompta, compareCompta, parseSoldes, compareSoldes, recalSoldes };

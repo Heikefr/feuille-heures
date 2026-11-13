@@ -59,4 +59,4 @@ async function rescueSheet(){toast("Récupération en cours…");var p;
   items.forEach(applyRemote);SY.last=Math.max(0,(p.now||0)-10000);SY.lastOk=Date.now();SY.err="";saveSync();persist();render();
   toast(items.length+" élément(s) récupéré(s) depuis le Google Sheet")}
 
-export { KEY_RESCUE, viewRescue, rescueDone, rescueExport, rescueKept, rescueAct, rescueSheet };
+export { KEY_RESCUE, viewRescue, rescueDone, rescueExport, rescueKept, rescueAct };

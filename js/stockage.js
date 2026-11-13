@@ -50,4 +50,4 @@ function loadLocal(){var raw=null;try{raw=localStorage.getItem(KEY);if(raw)apply
   catch(e){if(raw==null){S.storeErr=true;return}
     S.readErr={raw:raw,recent:String(e&&e.message)==="plus récent"};S.settings=defaultSettings(S.cur);S.weeks={}}}
 
-export { timers, saveWeek, saveSettings, SCHEMA, KEY, KEY_BK, WK_RE, cleanWeek, cleanWeeks, queue, snapshot, persist, applyData, migrate, migrate14b, migrateTypes, migrate15, migrate14, applyTheme, loadLocal };
+export { saveWeek, saveSettings, SCHEMA, KEY_BK, WK_RE, cleanWeek, cleanWeeks, snapshot, persist, applyData, migrate, applyTheme, loadLocal };

@@ -59,4 +59,4 @@ setInterval(function(){if(!document.hidden)syncNow()},60000);
 window.addEventListener("online",function(){NET.retry=0;syncNow()});
 window.addEventListener("offline",function(){if(SY.api){SY.err="Hors ligne";saveSync();safeRender()}});
 
-export { KEY_SYNC, SY, saveSync, touch, markAllDirty, docFor, applyRemote, syncApi, syncing, NET, syncRetry, pendingCount, syncLabel, syncNow, syncConnect, syncAdopt };
+export { SY, saveSync, touch, markAllDirty, applyRemote, syncApi, pendingCount, syncLabel, syncNow, syncConnect, syncAdopt };

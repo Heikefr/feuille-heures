@@ -1,5 +1,6 @@
 /* ÉTAT — version, journal des nouveautés et état en mémoire de l'appli (S). */
 import { defaultSettings, keyOf, mondayOf } from "./calculs.js";
+
 /* ===== Application ===== */
 var VERSION="0.10";
 /* Numéro de publication. Doit être identique à BUILD dans sw.js (vérifié par les tests) : c'est lui qui déclenche

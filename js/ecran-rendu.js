@@ -7,11 +7,11 @@ import { applyTheme, loadLocal, migrate } from "./stockage.js";
 import { SY, syncConnect, syncLabel, syncNow } from "./synchro.js";
 import { viewRescue } from "./secours.js";
 import { surveillerMisesAJour } from "./mise-a-jour.js";
-import { prefillFeries, viewSheet, viewWeek, viewYear, weekStatus } from "./ecran-semaine.js";
-import { viewSend } from "./ecran-envoi.js";
-import { reminders, viewBank } from "./ecran-compteurs.js";
 import { viewBilan } from "./ecran-bilan.js";
+import { reminders, viewBank } from "./ecran-compteurs.js";
+import { viewSend } from "./ecran-envoi.js";
 import { viewSettings } from "./ecran-reglages.js";
+import { prefillFeries, viewSheet, viewWeek, viewYear, weekStatus } from "./ecran-semaine.js";
 
 function boot(){
   loadLocal();migrate();applyTheme();S.ready=true;
@@ -75,4 +75,4 @@ function safeRender(){var a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/
 /* ----- Navigation ----- */
 function goWeek(n){S.send=false;S.cur=shiftKey(S.cur,n);S.sheet=null;S.preview=false;S.showObs=false;S.vres=null;render()}
 
-export { boot, render, refocus, deskShell, deskRecap, deskSend, tab, safeRender, goWeek };
+export { boot, render, deskRecap, deskSend, safeRender, goWeek };

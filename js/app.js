@@ -2,9 +2,9 @@
    L'ordre des imports n'a pas d'importance pour le fonctionnement : chaque module déclare ce dont il a besoin. */
 import { weekCalc } from "./calculs.js";
 import { counters, soldeCalc } from "./compteurs.js";
-import { S, BUILD } from "./etat.js";
-import { ficheData, ficheCanvas } from "./fiche.js";
-import { parseCompta, compareCompta, parseSoldes, compareSoldes } from "./compta.js";
+import { BUILD, S } from "./etat.js";
+import { ficheCanvas, ficheData } from "./fiche.js";
+import { compareCompta, compareSoldes, parseCompta, parseSoldes } from "./compta.js";
 import { bilanData } from "./ecran-bilan.js";
 import { boot } from "./ecran-rendu.js";
 import "./actions.js";

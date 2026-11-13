@@ -4,8 +4,8 @@ import { soldeCalc } from "./compteurs.js";
 import { S, TODAY, week } from "./etat.js";
 import { shareFile, toast } from "./outils.js";
 import { saveWeek } from "./stockage.js";
-import { subject } from "./ecran-envoi.js";
 import { BCOLS, MOIS, bilanData } from "./ecran-bilan.js";
+import { subject } from "./ecran-envoi.js";
 import { render } from "./ecran-rendu.js";
 
 async function bilanExport(){if(typeof ExcelJS==="undefined"){toast("Le module Excel n'a pas chargé. Recharge la page.");return}
@@ -91,4 +91,4 @@ async function buildXlsx(w,c,mon,st,sentAt,soldeApres){
   return await wb.xlsx.writeBuffer();
 }
 
-export { bilanExport, doExport, buildXlsx };
+export { bilanExport, doExport };

@@ -1,23 +1,12 @@
 /* ÉCRAN D'ENVOI — aperçu, destinataires, copie de la fiche et ouverture d'Outlook. */
 import { fmtD, weekCalc } from "./calculs.js";
-import { soldeCalc } from "./compteurs.js";
 import { S, week } from "./etat.js";
-import { copyLine, esc, mailList, toast } from "./outils.js";
+import { esc, mailList, toast } from "./outils.js";
 import { saveWeek } from "./stockage.js";
 import { addSnap } from "./sauvegardes.js";
 import { FT, ficheBlob, ficheURL } from "./fiche.js";
 import { render } from "./ecran-rendu.js";
 
-function mailPanel(){var st=S.settings,to=mailList(st.mails.paye),cc=st.mails.ccResp?mailList(st.mails.resp):[],subj=subject();
-  var ol="ms-outlook://compose?to="+to.map(encodeURIComponent).join(";")+(cc.length?"&cc="+cc.map(encodeURIComponent).join(";"):"")+"&subject="+encodeURIComponent(subj);
-  var mt="mailto:"+to.join(";")+"?subject="+encodeURIComponent(subj)+(cc.length?"&cc="+cc.join(";"):"");
-  var w=week(),c=weekCalc(w,st);
-  return'<div class="card pad"><b>Envoyer au service paye</b>'+
-  '<div class="tiny">1. L\'image de la fiche est copiée. 2. Ouvre Outlook : destinataires et objet sont remplis. 3. Dans le message, appuie longuement puis <b>Coller</b>.</div>'+
-  '<a class="btn primary" style="text-align:center;text-decoration:none" href="'+esc(ol)+'">Ouvrir Outlook</a>'+
-  '<div class="btns"><a class="btn small" style="text-align:center;text-decoration:none" href="'+esc(mt)+'">Ouvrir Mail</a><button class="btn small" data-act="copyhtml">Recopier la fiche</button><button class="btn small" data-act="shareimg">Partager l\'image</button><button class="btn small" data-act="export">Fichier Excel</button></div>'+
-  '<details><summary>Image de la fiche (appui long pour la copier)</summary><div class="pad"><img class="fiche-img" alt="Fiche de la semaine" src="'+ficheURL(w,c,st)+'"></div></details>'+
-  '<details><summary>Adresses et objet à copier</summary><div class="pad">'+copyLine("À",to.join("; "))+(cc.length?copyLine("Cc",cc.join("; ")):"")+copyLine("Objet",subj)+'</div></details></div>'}
 function sendUrls(){var st=S.settings,to=mailList(st.mails.paye),cc=st.mails.ccResp?mailList(st.mails.resp):[],subj=subject();
   return{to:to,cc:cc,subj:subj,ol:"ms-outlook://compose?to="+to.map(encodeURIComponent).join(";")+(cc.length?"&cc="+cc.map(encodeURIComponent).join(";"):"")+"&subject="+encodeURIComponent(subj),
     mt:"mailto:"+to.join(";")+"?subject="+encodeURIComponent(subj)+(cc.length?"&cc="+cc.join(";"):"")}}
@@ -43,7 +32,7 @@ function sendGo(mode){var w=week(),st=S.settings,c=weekCalc(w,st),done=false;
   if(mode==="nocopy"){later(function(){S.send=false;S.sendFail=false;render()});return}
   try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({"image/png":ficheBlob(w,c,st)})]).then(ok,ko);return}}catch(e){}
   ko()}
-function soldeApres(w,c){var s=soldeCalc(S.settings,S.weeks).solde;return w.validated?s:s+c.net}
+
 function subject(){var p=S.settings.profil;return"Feuille d'heures S"+(+S.cur.slice(6))+" "+S.cur.slice(0,4)+(p.nom?" – "+p.nom:"")+(p.matricule?" ("+p.matricule+")":"")}
 
-export { mailPanel, sendUrls, viewSend, sendGo, soldeApres, subject };
+export { viewSend, sendGo, subject };

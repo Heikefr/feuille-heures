@@ -1,5 +1,5 @@
 /* ÉCRAN COMPTEURS — cartes des compteurs, CET, échéances, rappels, fractionnement. */
-import { CONGE_H, CONGE_J, dayCalc, dayDate, ferieOf, fmtD, hm, keyOf, monOfKey, mondayOf, shiftKey, weekCalc, ymdStr } from "./calculs.js";
+import { CONGE_H, CONGE_J, dayCalc, dayDate, ferieOf, fmtD, hm, keyOf, monOfKey, mondayOf, weekCalc, ymdStr } from "./calculs.js";
 import { CET_MAX, CET_SRC, CPT_DEF, counters, cpPeriod, soldeCalc } from "./compteurs.js";
 import { S } from "./etat.js";
 import { esc, fmtJ, parseHM, shareFile, toast } from "./outils.js";
@@ -91,6 +91,6 @@ function viewBank(){var st=S.settings,cn=S._cpt||counters(st,S.weeks),out='<sect
   if(!s.rows.length)out+='<div class="lrow"><span class="tiny">Aucune fiche envoyée depuis le point de départ du compteur.</span></div>';
   s.rows.slice().reverse().forEach(function(r){var m=monOfKey(r.k);out+='<div class="lrow"><div><b>S'+(+r.k.slice(6))+'</b> <span class="tiny">'+fmtD(m)+' · HS '+hm(r.c.hs)+' · nuit '+hm(r.c.night)+'</span></div><span class="mono pos">'+hm(r.c.gain,true)+'</span><span class="mono">'+hm(r.after)+'</span></div>'});
   return out+'</div></section>'}
-function weekOptions(sel){var o="",k=shiftKey(S.cur,-12);for(var i=0;i<17;i++){var m=monOfKey(k);o+='<option value="'+k+'"'+(k===sel?' selected':'')+'>S'+(+k.slice(6))+' – '+fmtD(m)+'/'+m.getFullYear()+'</option>';k=shiftKey(k,1)}return o}
 
-export { upcoming, icsFor, exportIcs, reminders, viewReminders, fracCands, fracCard, cptCard, saveCounter, cetCard, saveCet, viewBank, weekOptions };
+
+export { upcoming, exportIcs, reminders, viewReminders, fracCands, fracCard, saveCounter, saveCet, viewBank };

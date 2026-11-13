@@ -35,4 +35,4 @@ async function shareFile(blob,name,title,text){
   }catch(e){if(e&&e.name==="AbortError")return false}
   var url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},4000);return true}
 
-export { ICON, esc, deepMerge, toast, renderToast, mailList, copyLine, fmtJ, parseHM, setPath, selectCode, fmtDT, h2m, shareFile };
+export { ICON, esc, deepMerge, toast, mailList, copyLine, fmtJ, parseHM, setPath, selectCode, fmtDT, h2m, shareFile };

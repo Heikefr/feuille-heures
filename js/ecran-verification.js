@@ -36,4 +36,4 @@ function viewVerif(){var out='<div class="card pad vbox"><b style="font-size:17p
   keys.filter(function(k){return S.weeks[k]&&S.weeks[k].check}).forEach(function(k){out+=verifCard(k)});
   return out}
 
-export { soldesCard, runVerif, verifMsg, verifCard, viewVerif };
+export { runVerif, verifMsg, viewVerif };
