@@ -106,6 +106,15 @@ async function photographier(page, scenario, ecran) {
  */
 const TOLERANCE = { ecartMax: 2, pixelsMax: 300 };
 
+/**
+ * Nombre de tentatives par écran.
+ * Le navigateur de test dessine parfois mal, au hasard, les cellules « collées » d'un tableau qui défile
+ * (première colonne du Bilan sur iPhone) : deux copies de la MÊME version peuvent alors donner deux photos
+ * différentes, environ une fois sur quatre. Un écran n'est donc déclaré différent que s'il l'est à chaque
+ * tentative. Un vrai changement de l'appli, lui, se voit à toutes les tentatives.
+ */
+const ESSAIS = 4;
+
 let banc;
 before(async () => { banc = await preparer(); });
 after(async () => { await banc.fermer(); });
@@ -118,17 +127,22 @@ for (const jeu of jeux()) {
       const differences = [];
       for (const sc of scenarios(jeu)) {
         const o = { donnees: jeu.donnees, ecran, theme };
-        const [ref, app] = await Promise.all([banc.ouvrirRef(o), banc.ouvrirApp(o)]);
-        const [a, b] = await Promise.all([photographier(ref, sc, ecran), photographier(app, sc, ecran)]);
-        assert.deepStrictEqual(app.erreursFH, [], `erreur JavaScript pendant « ${sc.nom} »`);
         const base = `ecran-${jeu.nom}-${ecran}-${theme}-${sc.nom}`;
         const voulu = CHANGEMENTS_VOULUS[sc.nom] || CHANGEMENTS_VOULUS["*"];
-        const d = await banc.comparer(a, b);
-        if (!d.memeTaille || d.max > TOLERANCE.ecartMax || d.nb > TOLERANCE.pixelsMax) {
+        let a, b, d;
+        // Jusqu'à ESSAIS tentatives, chacune sur des pages neuves : voir le commentaire de ESSAIS.
+        for (let essai = 1; essai <= ESSAIS; essai++) {
+          const [ref, app] = await Promise.all([banc.ouvrirRef(o), banc.ouvrirApp(o)]);
+          [a, b] = await Promise.all([photographier(ref, sc, ecran), photographier(app, sc, ecran)]);
+          assert.deepStrictEqual(app.erreursFH, [], `erreur JavaScript pendant « ${sc.nom} »`);
+          await Promise.all([ref.context().close(), app.context().close()]);
+          d = await banc.comparer(a, b);
+          if (d.memeTaille && d.max <= TOLERANCE.ecartMax && d.nb <= TOLERANCE.pixelsMax) { d = null; break; }
+        }
+        if (d) {
           if (peutGarder(jeu)) { garder(base + "-reference.png", a); garder(base + "-actuelle.png", b); }
           if (!voulu) differences.push(`${sc.nom} : ${d.memeTaille ? d.nb + " pixels différents " + d.zone + ", écart maximal " + d.max + "/255" : "taille de page " + d.zone}`);
         }
-        await Promise.all([ref.context().close(), app.context().close()]);
       }
       assert.deepStrictEqual(differences, [], "écrans qui ont changé sans que ce soit prévu (voir tests/resultats)");
     });
