@@ -12,6 +12,7 @@ import { defaultSettings } from "./calculs.js";
 import { S, VERSION, week } from "./etat.js";
 import { deepMerge, toast } from "./outils.js";
 import { touch } from "./synchro.js";
+import { prefAppareil } from "./appareil.js";
 
 /** Minuteries en cours (p = enregistrement différé). */
 var timers = {};
@@ -206,9 +207,14 @@ function migrate14() {
   S.settings.mig14 = true;
 }
 
+/** Thème en vigueur sur cet appareil : "light", "dark" ou "auto". Le choix de l'appareil passe avant l'ancien réglage synchronisé (voir appareil.js). */
+function themeChoisi() {
+  return prefAppareil("theme") || S.settings.theme || "auto";
+}
+
 /** Applique le thème choisi (clair, sombre, ou automatique selon l'appareil). */
 function applyTheme() {
-  var th = S.settings.theme, r = document.documentElement;
+  var th = themeChoisi(), r = document.documentElement;
   if (th === "light" || th === "dark") r.setAttribute("data-theme", th);
   else r.removeAttribute("data-theme");
 }
@@ -235,4 +241,4 @@ function loadLocal() {
     S.weeks = {};
   }
 }
-export { KEY_BK, SCHEMA, WK_RE, applyData, applyTheme, cleanWeek, cleanWeeks, loadLocal, migrate, persist, saveSettings, saveWeek, snapshot };
+export { themeChoisi, KEY_BK, SCHEMA, WK_RE, applyData, applyTheme, cleanWeek, cleanWeeks, loadLocal, migrate, persist, saveSettings, saveWeek, snapshot };

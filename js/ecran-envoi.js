@@ -5,7 +5,7 @@ import { S, week } from "./etat.js";
 import { esc, mailList, toast } from "./outils.js";
 import { saveWeek } from "./stockage.js";
 import { addSnap } from "./sauvegardes.js";
-import { FT, ficheBlob, ficheURL } from "./fiche.js";
+import { FT, ficheBlob, ficheObsEnTrop, ficheTaille, ficheURL } from "./fiche.js";
 import { render } from "./ecran-rendu.js";
 
 /**
@@ -33,6 +33,10 @@ function viewSend() {
     return '<div class="swho"><small>Cc</small><span>' + esc(x) + "</span></div>";
   }).join("");
   if (!u.to.length) who = '<div class="banner warn">Aucune adresse du service paye. <button class="btn small" data-act="dgo" data-t="set" data-p="dest">Les saisir</button></div>';
+  // Observations trop longues pour la fiche : on prévient, sans rien changer à la fiche.
+  var enTrop = ficheObsEnTrop(w, c, st);
+  var obsAlerte = enTrop ? '<div class="banner warn"><span>' + (enTrop > 1 ? enTrop + " lignes d'observation ne tiennent pas" : "1 ligne d'observation ne tient pas")
+      + ' sur la fiche (6 lignes au plus). Elles ne seront pas envoyées.</span>' + (w.validated ? "" : '<span class="btns"><button class="btn small" data-act="obsfix">Raccourcir</button></span>') + "</div>" : "";
   var steps = D ? ["La fiche est copiée" + (w.validated ? "." : " et la semaine passe en « envoyée »."), "Outlook s'ouvre avec les destinataires et l'objet.", "Clique dans le message et colle avec <b>Ctrl+V</b>."] : ["La fiche est copiée"
       + (w.validated ? "." : ", la semaine passe en « envoyée »."), "Outlook s'ouvre, destinataires et objet remplis.", "Dans le message : appui long puis <b>Coller</b>."];
   return '<div class="sendov" role="dialog" aria-modal="true" aria-label="Envoyer la fiche"><div class="sendbg" data-act="sendclose"></div><div class="sendm"><div class="sendh"><b>'
@@ -40,10 +44,10 @@ function viewSend() {
       + n) + '</b><button class="btn small" data-act="sendclose">✕ Fermer</button></div><div class="sendf"><div class="slab">Ce qui partira dans le mail</div><img class="fiche-img" alt="Fiche de la semaine '
       + n + '" src="' + ficheURL(w, c, st) + '"><div class="ftaille"><span>Taille dans le mail</span><div class="seg">'
       + Object.keys(FT).map(function(k) {
-    return '<button class="' + ((st.ficheT || "l") === k ? "on" : "") + '" data-act="ftaille" data-v="' + k + '">' + FT[k][1] + "</button>";
-  }).join("") + "</div><small>" + Math.round(FT[st.ficheT || "l"][0] * 1e3) + ' px de large</small></div></div><div class="sendr"><div class="slab">Destinataires</div><div class="swhos">'
+    return '<button class="' + (ficheTaille() === k ? "on" : "") + '" data-act="ftaille" data-v="' + k + '">' + FT[k][1] + "</button>";
+  }).join("") + "</div><small>" + Math.round(FT[ficheTaille()][0] * 1e3) + ' px de large</small></div></div><div class="sendr"><div class="slab">Destinataires</div><div class="swhos">'
       + who + '</div><div class="sobj">Objet : <b>' + esc(u.subj) + "</b></div>" + (w.validated ? '<div class="tiny">Envoyée le '
-      + esc(w.sentAt || "") + ". La renvoyer ne change rien dans l'appli.</div>" : "") + '<div class="sgrow"></div>'
+      + esc(w.sentAt || "") + ". La renvoyer ne change rien dans l'appli.</div>" : "") + '<div class="sgrow"></div>' + obsAlerte
       + (u.to.length ? '<a class="btn primary sgo" href="' + esc(u.ol) + '" data-act="sendgo" data-m="ol">Copier la fiche et ouvrir Outlook</a>' : '<button class="btn primary sgo" disabled>Copier la fiche et ouvrir Outlook</button>')
       + (S.sendFail ? `<div class="banner warn" style="display:block">La copie automatique n'a pas marché. ` + (D ? "Fais un clic droit sur la fiche puis « Copier l'image »" : "Fais un appui long sur la fiche puis « Copier »")
       + ', puis <a class="linkbtn" href="' + esc(u.ol) + '" data-act="sendgo" data-m="nocopy">ouvre Outlook</a>.</div>' : "")

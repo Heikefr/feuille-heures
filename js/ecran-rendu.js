@@ -67,6 +67,7 @@ function render() {
       + (fe.dataset.i != null ? '[data-i="' + fe.dataset.i + '"]' : "") + (fe.dataset.k ? '[data-k="' + fe.dataset.k
       + '"]' : "") : null;
   var body = S.tab === "week" ? viewWeek() : S.tab === "bank" ? viewBank() : S.tab === "bilan" ? viewBilan() : viewSettings();
+  body = bandeauRemplacement() + body;
   if (S.desk) {
     var y0 = window.scrollY;
     app.innerHTML = deskShell(body, mon, sun, status) + (S.sheet != null ? viewSheet() : "") + (S.year != null ? viewYear() : "")
@@ -82,6 +83,19 @@ function render() {
       + (S.year != null ? viewYear() : "") + (S.send ? viewSend() : "");
   window.scrollTo(0, y);
   refocus(fs);
+}
+
+/**
+ * Bandeau affiché quand la synchro a remplacé une version d'ici par celle, plus récente, d'un autre appareil
+ * (voir syncNow). "" s'il n'y a rien à signaler.
+ */
+function bandeauRemplacement() {
+  var quoi = S.remplace;
+  if (!quoi || !quoi.length) return "";
+  var noms = quoi.filter(function(x, i) { return quoi.indexOf(x) === i; });
+  return '<div class="banner info" role="status"><span><b>' + esc(noms.join(", ")) + (noms.length > 1 ? " remplacés" : noms[0] === "Réglages" ? " remplacés" : " remplacée")
+      + ".</b> Une modification plus récente venait d'un autre appareil. Ta version d'ici est gardée dans les sauvegardes.</span>"
+      + '<span class="btns"><button class="btn small" data-act="remplvoir">Voir les sauvegardes</button><button class="btn small" data-act="remplok">OK</button></span></div>';
 }
 
 /**

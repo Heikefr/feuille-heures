@@ -4,6 +4,7 @@
 import { ABS, autoLabel, defaultSettings, hm, toTime } from "./calculs.js";
 import { CHANGELOG, S, VERSION } from "./etat.js";
 import { copyLine, esc, fmtDT, mailList } from "./outils.js";
+import { themeChoisi } from "./stockage.js";
 import { SY } from "./synchro.js";
 import { backupDue, getSnaps, lastFileBackup } from "./sauvegardes.js";
 import { rescueKept } from "./secours.js";
@@ -46,7 +47,7 @@ function viewSettings() {
     return '<section><div class="ios-t">Réglages</div><div class="igl">Moi</div><div class="igr">' + setRow("profil", p.nom || "À remplir")
         + setRow("dest", nm ? nm + " adresse" + (nm > 1 ? "s" : "") : "À remplir") + '</div><div class="igl">Travail</div><div class="igr">'
         + setRow("horaires", st.horaires.length + " horaires") + setRow("regles", rulesDefault() ? "Accords 2010" : "Personnalisées")
-        + '</div><div class="igl">Appli</div><div class="igr">' + setRow("aff", { light: "Clair", dark: "Sombre" }[st.theme] || "Automatique")
+        + '</div><div class="igl">Appli</div><div class="igr">' + setRow("aff", { light: "Clair", dark: "Sombre" }[themeChoisi()] || "Automatique")
         + setRow("sync", SY.api ? SY.err ? "⚠ Erreur" : "Active" : "Désactivée") + setRow("save", (backupDue() ? "⚠ " : "")
         + (sn.length ? fmtDT(sn[0].date).slice(0, 5) : "Aucune")) + setRow("news", "v" + VERSION) + "</div></section>";
   }
@@ -105,8 +106,8 @@ function viewSettings() {
         + copyLine("Lien", location.origin + location.pathname + "?api=" + encodeURIComponent(SY.api) + "&cle=" + encodeURIComponent(SY.cle));
   }
   if (pg === "aff") out += '<div class="card pad"><div class="field"><label for="s-theme">Thème</label><select id="s-theme" data-act="sset" data-p="theme"><option value="auto"'
-      + (st.theme !== "light" && st.theme !== "dark" ? " selected" : "") + `>Automatique (comme l'iPhone)</option><option value="light"`
-      + (st.theme === "light" ? " selected" : "") + '>Clair</option><option value="dark"' + (st.theme === "dark" ? " selected" : "")
+      + (themeChoisi() !== "light" && themeChoisi() !== "dark" ? " selected" : "") + `>Automatique (comme l'iPhone)</option><option value="light"`
+      + (themeChoisi() === "light" ? " selected" : "") + '>Clair</option><option value="dark"' + (themeChoisi() === "dark" ? " selected" : "")
       + ">Sombre</option></select></div></div>";
   if (pg === "save") out += viewSnaps().replace("<h2>Sauvegardes</h2>", "");
   if (pg === "news") out += '<div class="card">' + CHANGELOG.map(function(c, i) {

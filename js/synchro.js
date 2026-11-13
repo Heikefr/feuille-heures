@@ -173,12 +173,19 @@ async function syncNow(manual) {
           sent++;
         }
       });
-      (j.rejected || []).forEach(function(it) {
-        if (!SY.dirty[it.k]) {
-          applyRemote(it);
-          changed = true;
-        }
+      // Envoi refusé : le Sheet avait une version plus récente, venue d'un autre appareil. Elle remplace celle d'ici.
+      // Depuis la 1.0, la version d'ici est d'abord mise dans les sauvegardes, et un bandeau le signale (S.remplace).
+      var refuses = (j.rejected || []).filter(function(it) {
+        return !SY.dirty[it.k];
       });
+      if (refuses.length) {
+        addSnap("Avant remplacement par un autre appareil", true);
+        S.remplace = (S.remplace || []).concat(refuses.map(function(it) {
+          return it.k === "settings" ? "Réglages" : "Semaine " + +it.k.slice(8);
+        }));
+        refuses.forEach(applyRemote);
+        changed = true;
+      }
     }
     var p = await syncApi("pull", { since: SY.last || 0 });
     (p.items || []).forEach(function(it) {

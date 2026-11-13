@@ -15,6 +15,7 @@ import { ficheBlob } from "./fiche.js";
 import { recalSoldes } from "./compta.js";
 import { bilanExport, doExport } from "./excel.js";
 import { KEY_RESCUE, rescueAct, rescueExport } from "./secours.js";
+import { definirPrefAppareil } from "./appareil.js";
 import { exportIcs, saveCet, saveCounter, upcoming } from "./ecran-compteurs.js";
 import { sendGo } from "./ecran-envoi.js";
 import { goWeek, render } from "./ecran-rendu.js";
@@ -117,11 +118,23 @@ app.addEventListener("click", function(e) {
     S.send = false;
     S.sendFail = false;
     render();
+  } else if (a === "obsfix") {
+    // Écran d'envoi › « Raccourcir » : retour à la saisie, curseur dans l'observation.
+    S.send = false;
+    S.showObs = true;
+    render();
+    var champ = [].slice.call(document.querySelectorAll('[data-act="obs"]')).filter(function(x) { return x.offsetParent; })[0];
+    if (champ) champ.focus();
+  } else if (a === "remplok" || a === "remplvoir") {
+    // Bandeau « remplacée par un autre appareil » : fermer, ou aller voir les sauvegardes.
+    S.remplace = null;
+    if (a === "remplvoir") { S.tab = "set"; S.setPage = "save"; S.verif = false; }
+    render();
   } else if (a === "sendgo") {
     sendGo(el.dataset.m);
   } else if (a === "ftaille") {
-    S.settings.ficheT = el.dataset.v;
-    saveSettings();
+    // La taille de la fiche est propre à l'appareil (voir appareil.js).
+    definirPrefAppareil("ficheT", el.dataset.v);
     render();
   } else if (a === "dmode") {
     S.dprev = el.dataset.m === "1";
@@ -406,8 +419,14 @@ app.addEventListener("change", function(e) {
     render();
   } else if (a === "sset") {
     var v = el.dataset.bool ? el.checked : el.dataset.time ? toMin(el.value) || 0 : el.type === "number" ? +el.value || 0 : el.value;
+    if (el.dataset.p === "theme") {
+      // Le thème est propre à l'appareil : il n'est ni rangé dans les réglages ni synchronisé.
+      definirPrefAppareil("theme", v);
+      applyTheme();
+      render();
+      return;
+    }
     setPath(S.settings, el.dataset.p, v);
-    if (el.dataset.p === "theme") applyTheme();
     saveSettings();
     render();
   } else if (a === "hset") {

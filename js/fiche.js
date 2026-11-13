@@ -7,6 +7,7 @@
 import { ABSC, DAYL, dayDate, ferieOf, fmtD, hm, isWork, toTime } from "./calculs.js";
 import { S } from "./etat.js";
 import { h2m } from "./outils.js";
+import { prefAppareil } from "./appareil.js";
 
 /**
  * Prépare le texte de chaque case de la fiche.
@@ -81,8 +82,10 @@ function ficheData(w, c, st) {
   String(w.obs || "").split(/\n/).forEach(function(l) {
     if (l.trim()) obs.push(l.trim());
   });
-  // La fiche papier n'a la place que pour 6 lignes d'observations : les suivantes ne sont pas dessinées.
-  F.obs = obs.slice(0, 6);
+  // La fiche papier n'a la place que pour OBS_MAX lignes d'observations : les suivantes ne sont pas dessinées.
+  // Le nombre total est gardé à part (obsTotal n'entre pas dans F, dont le contenu est figé par les tests).
+  ficheData.obsTotal = obs.length;
+  F.obs = obs.slice(0, OBS_MAX);
   F.net = c.net;
   return F;
 }
@@ -90,9 +93,27 @@ function ficheData(w, c, st) {
 /** Tailles d'envoi de l'image : code → [échelle, libellé]. La largeur dans le mail vaut échelle × 1000 pixels. */
 var FT = { s: [0.9, "Petite"], m: [1.2, "Moyenne"], l: [1.5, "Grande"], xl: [2, "Très grande"] };
 
+/** Nombre de lignes d'observations que la fiche peut afficher. */
+const OBS_MAX = 6;
+
+/**
+ * Nombre de lignes d'observations (automatiques + saisies) qui ne tiennent pas sur la fiche.
+ * @returns {number} 0 si tout tient.
+ */
+function ficheObsEnTrop(w, c, st) {
+  ficheData(w, c, st);
+  return Math.max(0, ficheData.obsTotal - OBS_MAX);
+}
+
+/** Taille d'envoi en vigueur sur cet appareil (code de FT). Une valeur inconnue retombe sur « Grande ». */
+function ficheTaille() {
+  const t = prefAppareil("ficheT") || S.settings.ficheT;
+  return FT[t] ? t : "l";
+}
+
 /** Échelle choisie dans l'écran d'envoi (Grande par défaut). */
 function ficheScale(st) {
-  return (FT[st.ficheT] || FT.l)[0];
+  return FT[ficheTaille()][0];
 }
 
 /**
@@ -232,4 +253,4 @@ function ficheBlob(w, c, st) {
     }, "image/png");
   });
 }
-export { FT, ficheBlob, ficheCanvas, ficheData, ficheURL };
+export { FT, ficheBlob, ficheCanvas, ficheData, ficheURL, ficheObsEnTrop, ficheTaille };

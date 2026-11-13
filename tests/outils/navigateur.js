@@ -64,11 +64,12 @@ function lancer() {
  * @param {"light"|"dark"} [options.theme="light"]  Thème forcé dans les réglages.
  * @param {boolean} [options.horsLigne=false]    Vrai pour laisser l'appli installer son fonctionnement hors ligne (sw.js).
  *                                                Faux partout ailleurs : les autres tests veulent des fichiers toujours frais.
+ * @param {(page:import("playwright").Page)=>Promise<void>} [options.avant]  Fonction appelée juste avant le chargement de la page.
  * @param {Object<string,string>} [options.brut]   Clés de stockage à écrire telles quelles, en plus ou à la place des données
  *                                                (sert à simuler des données abîmées, des sauvegardes, une synchro configurée).
  * @returns {Promise<import("playwright").Page>} Page prête, appli affichée.
  */
-async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "light", brut = {}, horsLigne = false }) {
+async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "light", brut = {}, horsLigne = false, avant = null }) {
   const contexte = await navigateur.newContext({
     ...ECRANS[ecran],
     locale: "fr-FR",
@@ -98,6 +99,8 @@ async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "lig
     (st) => { if (!sessionStorage.getItem("fh-test-pret")) { localStorage.clear(); for (const k in st) localStorage.setItem(k, st[k]); sessionStorage.setItem("fh-test-pret", "1"); } },
     stockage
   );
+  // Préparatifs propres à un test (par exemple brancher un faux Google Sheet) avant le chargement de la page.
+  if (avant) await avant(page);
   const erreurs = [];
   page.on("pageerror", (e) => erreurs.push(String(e)));
   page.erreursFH = erreurs;
