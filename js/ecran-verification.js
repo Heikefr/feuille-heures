@@ -11,7 +11,7 @@ import { render } from "./ecran-rendu.js";
 function soldesCard() {
   var x = S.sres.res, d = x.date.split("-").reverse().join("/");
   var h = '<div class="vres"><div class="vhd ' + (x.bad ? "ko" : "ok") + '"><span>Soldes au ' + d + "</span><span>"
-      + (x.bad ? "✗ " + x.bad + " écart" + (x.bad > 1 ? "s" : "") : "✓ tout correspond") + '</span></div><table class="vtab"><tr><th>Élément</th><th>Appli</th><th>Compta</th><th></th></tr>'
+      + (x.bad ? "✗ " + x.bad + " écart" + (x.bad > 1 ? "s" : "") : "✓ tout correspond") + '</span></div><table class="vtab"><tr><th scope="col">Élément</th><th scope="col">Appli</th><th scope="col">Compta</th><th scope="col"><span class="lecteur">Résultat</span></th></tr>'
       + x.items.map(function(y) {
     return '<tr class="' + (y.ok ? "" : "bad") + '"><td>' + esc(y.l) + (y.fav || y.hint ? '<br><small style="font-weight:600">'
         + (y.hint ? esc(y.hint) : y.fav > 0 ? "en ta faveur" : "en ta défaveur") + "</small>" : "") + "</td><td>" + esc(y.a)
@@ -77,7 +77,7 @@ function verifCard(k) {
       + '" data-open="' + (open ? 1 : 0) + '"><span>S' + +k.slice(6) + " · " + fmtD(dayDate(k, 0)) + " – " + fmtD(dayDate(k, 6))
       + "</span><span>" + (ch.bad ? "✗ " + ch.bad + " écart" + (ch.bad > 1 ? "s" : "") : "✓ tout correspond") + "</span></button>";
   if (open) {
-    h += '<table class="vtab"><tr><th>Élément</th><th>Appli</th><th>Compta</th><th></th></tr>' + ch.items.map(function(x) {
+    h += '<table class="vtab"><tr><th scope="col">Élément</th><th scope="col">Appli</th><th scope="col">Compta</th><th scope="col"><span class="lecteur">Résultat</span></th></tr>' + ch.items.map(function(x) {
       return '<tr class="' + (x.ok ? "" : "bad") + '"><td>' + esc(x.l) + (x.fav ? '<br><small style="font-weight:600">'
           + (x.fav > 0 ? "en ta faveur" : "en ta défaveur") + "</small>" : "") + "</td><td>" + esc(x.a) + "</td><td>" + esc(x.b)
           + "</td><td>" + (x.ok ? "✓" : "✗") + "</td></tr>";

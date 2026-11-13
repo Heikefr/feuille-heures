@@ -28,7 +28,7 @@ const CACHE_EXTERNE = "feuille-heures-externe";
 
 /** Tous les fichiers de l'appli. "./" est la page elle-même. */
 const FICHIERS = ["./", "./index.html", "./css/style.css",
-  "./js/actions.js", "./js/app.js", "./js/appareil.js", "./js/calculs.js", "./js/compta.js", "./js/compteurs.js", "./js/ecran-bilan.js",
+  "./js/accessibilite.js", "./js/actions.js", "./js/app.js", "./js/appareil.js", "./js/calculs.js", "./js/compta.js", "./js/compteurs.js", "./js/ecran-bilan.js",
   "./js/ecran-compteurs.js", "./js/ecran-envoi.js", "./js/ecran-reglages.js", "./js/ecran-rendu.js", "./js/ecran-semaine.js",
   "./js/ecran-verification.js", "./js/etat.js", "./js/excel.js", "./js/fiche.js", "./js/mise-a-jour.js", "./js/outils.js",
   "./js/sauvegardes.js", "./js/secours.js", "./js/stockage.js", "./js/synchro.js",

@@ -81,6 +81,10 @@ async function photographier(page, scenario, ecran) {
   await scenario.gestes(page, ecran);
   // Le petit message temporaire (« Lundi à vendredi remplis ») disparaît seul après 2,6 s : on l'enlève pour une photo stable.
   await page.evaluate(() => { const t = document.getElementById("toast"); if (t) t.remove(); });
+  // Le navigateur de test dessine mal, au hasard, les cellules « collées » (position: sticky) d'un tableau qui défile :
+  // la première colonne du Bilan perdait ou non ses bordures d'une page à l'autre. Sur une photo de la page entière,
+  // « collé » ne veut rien dire : on le neutralise des deux côtés pour comparer ce qui compte.
+  await page.addStyleTag({ content: ".btab th, .btab td { position: static !important; }" });
   // La souris est rangée dans le coin : sinon l'élément resté sous le pointeur peut s'afficher « survolé ».
   await page.mouse.move(0, 0);
   // On attend que l'affichage soit posé : deux photos de suite doivent être identiques

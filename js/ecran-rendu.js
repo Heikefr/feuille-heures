@@ -13,6 +13,7 @@ import { SY, syncConnect, syncLabel, syncNow } from "./synchro.js";
 import { prechargerExcel } from "./excel.js";
 import { viewRescue } from "./secours.js";
 import { surveillerMisesAJour } from "./mise-a-jour.js";
+import { libelleSemaine, soignerFocus } from "./accessibilite.js";
 import { viewBilan } from "./ecran-bilan.js";
 import { reminders, viewBank } from "./ecran-compteurs.js";
 import { viewSend } from "./ecran-envoi.js";
@@ -74,6 +75,7 @@ function render() {
         + (S.send ? viewSend() : "");
     window.scrollTo(0, y0);
     refocus(fs);
+    soignerFocus(fs);
     return;
   }
   var tabs = '<nav class="tabs"><div class="wrap">' + tab("week", "Semaine", ICON.week) + tab("bank", "Compteur", ICON.bank)
@@ -83,6 +85,7 @@ function render() {
       + (S.year != null ? viewYear() : "") + (S.send ? viewSend() : "");
   window.scrollTo(0, y);
   refocus(fs);
+  soignerFocus(fs);
 }
 
 /**
@@ -132,7 +135,7 @@ function deskShell(body, mon, sun, status) {
   for (var i = 0; i < 10; i++) {
     var k = shiftKey(k0, i), ws = weekStatus(k);
     h += '<button class="dwk ' + ws + (k === cur ? " cur" : "") + (k === tk ? " today" : "") + '" data-act="ygo" data-k="'
-        + k + '" title="Semaine ' + +k.slice(6) + '">' + +k.slice(6) + "</button>";
+        + k + '" title="Semaine ' + +k.slice(6) + '" aria-label="' + libelleSemaine(+k.slice(6), ws, k === tk) + '">' + +k.slice(6) + "</button>";
   }
   h += '</div><div class="dleg"><span style="color:#7fd3a1">■</span> envoyée &nbsp;<span style="color:#ffbf73">■</span> brouillon</div>';
   var rm = reminders().filter(function(x) {

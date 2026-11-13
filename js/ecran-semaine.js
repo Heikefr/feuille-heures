@@ -7,6 +7,7 @@ import { ICON, esc } from "./outils.js";
 import { saveWeek } from "./stockage.js";
 import { SY, pendingCount } from "./synchro.js";
 import { ficheCanvas, ficheURL } from "./fiche.js";
+import { libelleSemaine } from "./accessibilite.js";
 import { fracCands, fracCard, viewReminders } from "./ecran-compteurs.js";
 import { deskRecap, deskSend } from "./ecran-rendu.js";
 import { viewVerif } from "./ecran-verification.js";
@@ -242,7 +243,8 @@ function viewYear() {
       }
       if (mark.indexOf("c") === 0 || mark.indexOf("n") === 0) c = c.replace("dr", "");
       return '<button class="yw ' + (mark ? mark + " " + c.replace("dr", "") : c) + (k2 === today ? " cur" : "")
-          + (k2 === S.cur ? " sel" : "") + '" data-act="ygo" data-k="' + k2 + '">S' + k2.slice(6) + (w && w.check ? '<em class="ychk'
+          + (k2 === S.cur ? " sel" : "") + '" data-act="ygo" data-k="' + k2 + '" aria-label="' + libelleSemaine(+k2.slice(6), weekStatus(k2), k2 === today)
+          + (w && w.check ? (w.check.bad ? ", écart avec la compta" : ", vérifiée avec la compta") : "") + '">S' + k2.slice(6) + (w && w.check ? '<em class="ychk'
           + (w.check.bad ? " bad" : "") + '">' + (w.check.bad ? "!" : "✓") + "</em>" : "") + "</button>";
     }).join("") + "</div></div>";
     var nn = by[i].filter(function(k2) {

@@ -83,14 +83,14 @@ function viewBilan() {
   function kv0(l, v) {
     return kpi(l, v);
   }
-  out += '<div class="card btab"><table><thead><tr><th>Mois</th>' + cols.map(function(c) {
-    return "<th>" + c[1] + "</th>";
+  out += '<div class="card btab"><table><thead><tr><th scope="col">Mois</th>' + cols.map(function(c) {
+    return '<th scope="col">' + c[1] + "</th>";
   }).join("") + "</tr></thead><tbody>";
   B.M.forEach(function(m, i) {
     var empty = !BCOLS.some(function(c) {
       return m[c[0]];
     });
-    out += '<tr class="' + (i > cur ? "fut" : "") + (empty ? " vide" : "") + '"><th>' + MOIS[i] + "</th>" + cols.map(function(c) {
+    out += '<tr class="' + (i > cur ? "fut" : "") + (empty ? " vide" : "") + '"><th scope="row">' + MOIS[i] + "</th>" + cols.map(function(c) {
       var v = m[c[0]];
       if (!v) return '<td class="z">·</td>';
       if (c[0] === "hs") return '<td><span class="bbar" style="width:' + Math.round(v / mx * 100) + '%"></span><span class="bv">'
@@ -98,7 +98,7 @@ function viewBilan() {
       return "<td>" + f(c, v) + "</td>";
     }).join("") + "</tr>";
   });
-  out += "</tbody><tfoot><tr><th>Total</th>" + cols.map(function(c) {
+  out += '</tbody><tfoot><tr><th scope="row">Total</th>' + cols.map(function(c) {
     return "<td>" + f(c, T[c[0]]) + "</td>";
   }).join("") + "</tr></tfoot></table></div>";
   out += '<div class="tiny">' + B.nb.sent + " semaine(s) envoyée(s)" + (B.nb.draft ? ", " + B.nb.draft + " brouillon(s) compté(s)" : "")

@@ -109,7 +109,7 @@ test("données abîmées : si le Google Sheet ne répond pas, on reste en secour
   const page = await banc.ouvrirApp({ brut: { [CLE]: ABIME, [CLE_SYNCHRO]: synchro } });
   await fauxSheet(page, null);
   await page.locator('[data-act="rssheet"]').click();
-  await page.getByText("Récupération impossible").waitFor();
+  await page.locator("#toast", { hasText: "Récupération impossible" }).waitFor();
   await page.getByText("Tes données n'ont pas pu être lues").waitFor();
   assert.equal(await lire(page, CLE), ABIME);
   assert.equal(await lire(page, CLE_MISE_DE_COTE), null);
@@ -144,7 +144,7 @@ test("données abîmées : importer un fichier de sauvegarde ; un mauvais fichie
   const page = await banc.ouvrirApp({ brut: { [CLE]: ABIME } });
   // Mauvais fichier : message, et on reste sur l'écran de secours, texte intact.
   await page.locator("#imp").setInputFiles({ name: "nimporte.json", mimeType: "application/json", buffer: Buffer.from("pas du json") });
-  await page.getByText("n'est pas une sauvegarde").waitFor();
+  await page.locator("#toast", { hasText: "n'est pas une sauvegarde" }).waitFor();
   await page.getByText("Tes données n'ont pas pu être lues").waitFor();
   assert.equal(await lire(page, CLE), ABIME);
   // Bon fichier : l'appli revient avec les données du fichier.

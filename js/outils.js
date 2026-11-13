@@ -3,6 +3,7 @@
  */
 import { toMin } from "./calculs.js";
 import { S } from "./etat.js";
+import { annoncer } from "./accessibilite.js";
 
 /** Icônes (dessins SVG) utilisées dans les onglets et les boutons. */
 var ICON = {
@@ -59,6 +60,7 @@ function toast(m) {
 function renderToast() {
   var el = document.getElementById("toast");
   if (el) el.remove();
+  annoncer(S.toast); // pour les lecteurs d'écran (zone permanente, invisible)
   if (!S.toast) return;
   el = document.createElement("div");
   el.id = "toast";
