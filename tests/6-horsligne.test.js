@@ -43,7 +43,7 @@ function publierVersion010(dossier) {
 function changerBuild(dossier, numero) {
   const sw = path.join(dossier, "sw.js"), etat = path.join(dossier, "js", "etat.js");
   fs.writeFileSync(sw, fs.readFileSync(sw, "utf8").replace(/const BUILD = "[^"]+"/, `const BUILD = "${numero}"`));
-  fs.writeFileSync(etat, fs.readFileSync(etat, "utf8").replace(/var BUILD="[^"]+"/, `var BUILD="${numero}"`));
+  fs.writeFileSync(etat, fs.readFileSync(etat, "utf8").replace(/var BUILD\s*=\s*"[^"]+"/, `var BUILD = "${numero}"`));
 }
 /** Attend que le fonctionnement hors ligne soit installé ET aux commandes de la page. */
 const attendreHorsLignePret = (page) => page.waitForFunction(() => navigator.serviceWorker.controller && navigator.serviceWorker.ready.then(() => true));
