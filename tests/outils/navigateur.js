@@ -54,9 +54,11 @@ function lancer() {
  * @param {object} options.donnees   Contenu du stockage (format d'une sauvegarde).
  * @param {"iphone"|"etroit"|"pc"} [options.ecran="pc"]
  * @param {"light"|"dark"} [options.theme="light"]  Thème forcé dans les réglages.
+ * @param {Object<string,string>} [options.brut]   Clés de stockage à écrire telles quelles, en plus ou à la place des données
+ *                                                (sert à simuler des données abîmées, des sauvegardes, une synchro configurée).
  * @returns {Promise<import("playwright").Page>} Page prête, appli affichée.
  */
-async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "light" }) {
+async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "light", brut = {} }) {
   const contexte = await navigateur.newContext({
     ...ECRANS[ecran],
     locale: "fr-FR",
@@ -69,11 +71,17 @@ async function ouvrir(navigateur, adresse, { donnees, ecran = "pc", theme = "lig
   // Tout ce qui n'est pas notre serveur local est coupé (polices, CDN, synchro).
   await page.route("**/*", (route) => (route.request().url().startsWith(new URL(adresse).origin) ? route.continue() : route.abort()));
   await page.clock.setFixedTime(MAINTENANT);
-  const contenu = JSON.parse(JSON.stringify(donnees));
-  contenu.settings = Object.assign({}, contenu.settings, { theme });
+  const stockage = {};
+  if (donnees) {
+    const contenu = JSON.parse(JSON.stringify(donnees));
+    contenu.settings = Object.assign({}, contenu.settings, { theme });
+    stockage[CLE_DONNEES] = JSON.stringify(contenu);
+  }
+  Object.assign(stockage, brut);
+  // Le stockage n'est rempli qu'à la première ouverture : un rechargement de page garde ce que l'appli a écrit.
   await page.addInitScript(
-    ([cle, valeur]) => { if (!sessionStorage.getItem("fh-test-pret")) { localStorage.clear(); localStorage.setItem(cle, valeur); sessionStorage.setItem("fh-test-pret", "1"); } },
-    [CLE_DONNEES, JSON.stringify(contenu)]
+    (st) => { if (!sessionStorage.getItem("fh-test-pret")) { localStorage.clear(); for (const k in st) localStorage.setItem(k, st[k]); sessionStorage.setItem("fh-test-pret", "1"); } },
+    stockage
   );
   const erreurs = [];
   page.on("pageerror", (e) => erreurs.push(String(e)));

@@ -609,7 +609,7 @@ function queue(){clearTimeout(timers.p);timers.p=setTimeout(persist,300)}
 window.addEventListener("pagehide",function(){if(timers.p){clearTimeout(timers.p);persist()}});
 document.addEventListener("visibilitychange",function(){if(document.hidden&&timers.p){clearTimeout(timers.p);persist()}});
 function snapshot(){return{app:"feuille-heures",format:SCHEMA,version:VERSION,exporte:new Date().toISOString().slice(0,16),settings:S.settings,weeks:S.weeks}}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(snapshot()));return true}catch(e){toast("Impossible d'enregistrer sur cet appareil");return false}}
+function persist(){if(S.readErr)return false;/* mode secours : on ne touche pas aux données illisibles */try{localStorage.setItem(KEY,JSON.stringify(snapshot()));return true}catch(e){toast("Impossible d'enregistrer sur cet appareil");return false}}
 function applyData(d){if(!d||typeof d!=="object")throw new Error("format");if(+d.format>SCHEMA)throw new Error("plus récent");
   if(d.settings&&typeof d.settings==="object")S.settings=deepMerge(defaultSettings(S.cur),d.settings);
   if(d.weeks){var cw=cleanWeeks(d.weeks);S.weeks=cw.weeks;S.badWeeks=cw.bad}migrate();applyTheme()}
@@ -626,11 +626,18 @@ function migrateTypes(){Object.keys(S.weeks).forEach(function(k){(S.weeks[k]&&S.
 function migrate15(){migrateTypes();if(S.settings.mig15)return;(S.settings.horaires||[]).forEach(function(h){if(h.id==="m3"&&h.start===330&&h.end===780){h.end=750;h.fri=null}});S.settings.mig15=true}
 function migrate14(){migrate14b();migrate15();if(S.settings.mig14)return;(S.settings.horaires||[]).forEach(function(h){if(h.id==="m3"&&!h.fri&&h.end===780)h.fri={start:330,end:720,pause:0,theo:420}});S.settings.mig14=true}
 function applyTheme(){var th=S.settings.theme,r=document.documentElement;if(th==="light"||th==="dark")r.setAttribute("data-theme",th);else r.removeAttribute("data-theme")}
-function loadLocal(){try{var raw=localStorage.getItem(KEY);if(raw)applyData(JSON.parse(raw))}catch(e){S.readErr=true}}
+/* Lecture des données de l'appareil.
+   Si le texte enregistré existe mais ne peut pas être relu (abîmé, ou écrit par une version plus récente de l'appli),
+   on passe en « mode secours » : S.readErr garde le texte d'origine, plus rien n'est enregistré ni synchronisé,
+   et l'écran de secours (viewRescue) demande quoi faire. Avant la 1.0, le premier enregistrement écrasait tout.
+   Si c'est le stockage lui-même qui est inaccessible (raw reste null), on garde l'ancien comportement : simple bandeau. */
+function loadLocal(){var raw=null;try{raw=localStorage.getItem(KEY);if(raw)applyData(JSON.parse(raw))}
+  catch(e){if(raw==null){S.storeErr=true;return}
+    S.readErr={raw:raw,recent:String(e&&e.message)==="plus récent"};S.settings=defaultSettings(S.cur);S.weeks={}}}
 
 function boot(){
   loadLocal();migrate();applyTheme();S.ready=true;
-  try{var q=new URLSearchParams(location.search);if(q.get("api")&&q.get("cle")){var qa=q.get("api"),qc=q.get("cle");history.replaceState(null,"",location.pathname);S.tab="set";S.setPage="sync";render();syncConnect(qa,qc);return}}catch(e){}
+  try{var q=new URLSearchParams(location.search);if(!S.readErr&&q.get("api")&&q.get("cle")){var qa=q.get("api"),qc=q.get("cle");history.replaceState(null,"",location.pathname);S.tab="set";S.setPage="sync";render();syncConnect(qa,qc);return}}catch(e){}
   render();syncNow();
   if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)navigator.serviceWorker.register("sw.js").catch(function(){});
 }
@@ -641,6 +648,7 @@ function prefillFeries(k){var w=week(k),ch=false;if(w.validated)return;
   if(ch)saveWeek(k)}
 /* ----- Rendu ----- */
 function render(){S.defer=false;
+  if(S.readErr){app.innerHTML=viewRescue();return}
   prefillFeries(S.cur);S._cpt=counters(S.settings,S.weeks);
   var mon=monOfKey(S.cur),sun=new Date(mon);sun.setDate(sun.getDate()+6);var w=week();
   var ws=weekStatus(S.cur),status=ws==="s"?'<span class="chip sent">Envoyée</span>':ws==="dr"?'<span class="chip draft">Brouillon</span>':'';
@@ -706,7 +714,7 @@ function isChanged(d,i,k){var sc=/^sch:/.test(d.type||"")?schedFor(S.settings,d.
 function primes(dc){return'<span class="prim"><i class="'+(dc.panier?'on':'')+'">P</i><i class="'+(dc.panier?'on':'')+'">E</i><i class="'+(dc.sam?'on':'')+'">S</i></span>'}
 function viewWeek(){
   var st=S.settings,w=week(),c=weekCalc(w,st),mon=monOfKey(S.cur),out='<section>',lock=w.validated?' disabled':'',D=S.desk,P=D&&S.dprev;
-  if(S.readErr)out+='<div class="banner warn">Impossible de lire les données enregistrées sur cet appareil.</div>';
+  if(S.storeErr)out+='<div class="banner warn">Impossible de lire les données enregistrées sur cet appareil.</div>';
   if(!st.profil.nom&&!D)out+='<div class="banner info">Renseigne ton profil et les adresses mail dans Réglages. <button class="btn small" data-act="tab" data-t="set">Ouvrir</button></div>';
   if(w.validated)out+='<div class="banner ok"><span>Envoyée'+(w.sentAt?' le '+esc(w.sentAt):'')+'. Semaine verrouillée.</span><button class="btn small" data-act="reopen">Modifier</button></div>';
   else{out+='<div class="quick" aria-label="Remplir lundi à vendredi"><span class="qlbl">Remplir :</span>';
@@ -1061,6 +1069,7 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   if(["vtxt","dset","xset","xsel","sset","hset","obs","xsam","hfri","dtype","dpause","wnote","ynote","syncf","cfix"].indexOf(a)>=0)return;
   if(a==="ygo"&&S.lpFired){S.lpFired=false;return}
   if(a==="yclose"&&e.target!==el)return;
+  if(S.readErr){rescueAct(a);return}
   var w=week();
   if(a==="tab"){S.tab=el.dataset.t;S.sheet=null;S.setPage=null;S.confirm=null;render();window.scrollTo(0,0)}
   else if(a==="year"){S.year=S.year!=null?null:+S.cur.slice(0,4);render()}
@@ -1123,6 +1132,8 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   else if(a==="clear"){w.days=[{},{},{},{},{},{},{}];w.note="";saveWeek();render()}
   else if(a==="sendhtml")sendHtml(true);
   else if(a==="copyhtml")sendHtml(false);
+  else if(a==="rsexport"){rescueExport()}
+  else if(a==="rsforget"){if(S.confirm!=="rsforget"){S.confirm="rsforget";render();return}S.confirm=null;try{localStorage.removeItem(KEY_RESCUE)}catch(x){}render();toast("Données illisibles supprimées")}
   else if(a==="snapnew"){addSnap("Sauvegarde manuelle",false);render();toast("Sauvegarde créée dans l'appli")}
   else if(a==="snapexp")exportSnap(el.dataset.id);
   else if(a==="snaprest"){if(S.confirm!=="r"+el.dataset.id){S.confirm="r"+el.dataset.id;render();return}S.confirm=null;restoreSnap(el.dataset.id)}
@@ -1174,7 +1185,7 @@ function congeChooser(k){return'<div class="btns">'+["cp","c5","frac"].map(funct
 var KEY_SYNC="feuille-heures-sync",SY=(function(){try{return JSON.parse(localStorage.getItem(KEY_SYNC))||{}}catch(e){return{}}})();
 SY.meta=SY.meta||{};SY.dirty=SY.dirty||{};
 function saveSync(){try{localStorage.setItem(KEY_SYNC,JSON.stringify(SY))}catch(e){}}
-function touch(k){SY.meta[k]=Date.now();SY.dirty[k]=1;saveSync();if(SY.api){clearTimeout(touch.t);touch.t=setTimeout(syncNow,1500)}}
+function touch(k){if(S.readErr)return;SY.meta[k]=Date.now();SY.dirty[k]=1;saveSync();if(SY.api){clearTimeout(touch.t);touch.t=setTimeout(syncNow,1500)}}
 function markAllDirty(){var n=Date.now();SY.meta.settings=n;SY.dirty.settings=1;Object.keys(S.weeks).forEach(function(k){SY.meta["w:"+k]=n;SY.dirty["w:"+k]=1});saveSync();if(SY.api)syncNow()}
 function docFor(k){return k==="settings"?S.settings:S.weeks[k.slice(2)]||null}
 function applyRemote(it){if(it.k==="settings"){S.settings=deepMerge(defaultSettings(S.cur),it.d||{});migrate();applyTheme()}else if(it.k.indexOf("w:")===0&&it.d&&WK_RE.test(it.k.slice(2))){var w=cleanWeek(it.d);if(w)S.weeks[it.k.slice(2)]=w}SY.meta[it.k]=it.t}
@@ -1194,7 +1205,7 @@ function syncLabel(){var nd=pendingCount(),ago=SY.lastOk?Math.round((Date.now()-
   if(navigator.onLine===false||SY.err==="Hors ligne")return{c:"off",t:"Hors ligne"+(nd?" · "+nd+" modif. en attente":"")};
   if(SY.err)return{c:"err",t:"Synchro en échec"+(nd?" · "+nd+" en attente":"")+" · nouvel essai auto"};
   return{c:"ok",t:"Synchronisé"+(ago!=null?(ago<1?" à l'instant":" il y a "+ago+" min"):"")}}
-async function syncNow(manual){if(!SY.api||syncing)return;syncing=true;var changed=false,hadErr=!!SY.err,sent=0;clearTimeout(NET.t);
+async function syncNow(manual){if(!SY.api||syncing||S.readErr)return;syncing=true;var changed=false,hadErr=!!SY.err,sent=0;clearTimeout(NET.t);
   try{var keys=Object.keys(SY.dirty);
     if(keys.length){var items=keys.map(function(k){return{k:k,t:SY.meta[k]||Date.now(),d:docFor(k)}});var j=await syncApi("push",{items:items});
       items.forEach(function(it){if(SY.meta[it.k]===it.t){delete SY.dirty[it.k];sent++}});
@@ -1210,12 +1221,15 @@ async function syncNow(manual){if(!SY.api||syncing)return;syncing=true;var chang
 function safeRender(){var a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&app.contains(a)){clearTimeout(safeRender.t);safeRender.t=setTimeout(safeRender,2500);return}render()}
 async function syncConnect(api,cle){if(!/^https:\/\/script\.google\.com\//.test(api)){toast("L'adresse doit commencer par https://script.google.com/");return}if(!cle){toast("Saisis le code d'accès");return}
   addSnap("Avant synchronisation",true);SY.api=api;SY.cle=cle;SY.last=0;SY.dirty={};
-  try{var p=await syncApi("pull",{since:0}),remote={};
+  try{await syncAdopt();render();toast("Synchronisation activée")}
+  catch(e){SY.api="";SY.cle="";saveSync();render();toast("Connexion impossible : "+(e&&e.message||e))}}
+/* Reprise complète : relit tout le Google Sheet, l'applique par-dessus les données de l'appareil,
+   puis marque « à envoyer » ce qui n'existe que sur l'appareil. Lève une erreur si le Sheet ne répond pas. */
+async function syncAdopt(){var p=await syncApi("pull",{since:0}),remote={};
     (p.items||[]).forEach(function(it){remote[it.k]=1;applyRemote(it)});
     if(!remote.settings){SY.meta.settings=Date.now();SY.dirty.settings=1}
     Object.keys(S.weeks).forEach(function(k){if(!remote["w:"+k]){SY.meta["w:"+k]=Date.now();SY.dirty["w:"+k]=1}});
-    SY.last=Math.max(0,(p.now||0)-10000);saveSync();persist();await syncNow();render();toast("Synchronisation activée")}
-  catch(e){SY.api="";SY.cle="";saveSync();render();toast("Connexion impossible : "+(e&&e.message||e))}}
+    SY.last=Math.max(0,(p.now||0)-10000);saveSync();persist();await syncNow();return(p.items||[]).length}
 document.addEventListener("visibilitychange",function(){if(!document.hidden)syncNow()});
 setInterval(function(){if(!document.hidden)syncNow()},60000);
 window.addEventListener("online",function(){NET.retry=0;syncNow()});
@@ -1226,7 +1240,7 @@ var KEY_SNAPS="feuille-heures-snapshots",SNAP_MAX=15;
 function fmtDT(iso){try{return new Date(iso).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"})}catch(e){return iso}}
 function getSnaps(){try{return JSON.parse(localStorage.getItem(KEY_SNAPS)||"[]")}catch(e){return[]}}
 function setSnaps(a){for(;;){try{localStorage.setItem(KEY_SNAPS,JSON.stringify(a));return true}catch(e){var i=-1;for(var j=a.length-1;j>=0;j--)if(a[j].auto){i=j;break}if(i<0&&a.length)i=a.length-1;if(i<0)return false;a.splice(i,1)}}}
-function addSnap(label,auto){var a=getSnaps();a.unshift({id:Date.now().toString(36),date:new Date().toISOString(),label:label,auto:!!auto,data:snapshot()});
+function addSnap(label,auto){if(S.readErr)return;/* pas de sauvegarde d'une appli vide en mode secours */var a=getSnaps();a.unshift({id:Date.now().toString(36),date:new Date().toISOString(),label:label,auto:!!auto,data:snapshot()});
   while(a.length>SNAP_MAX){var k=-1;for(var j=a.length-1;j>=0;j--)if(a[j].auto){k=j;break}a.splice(k<0?a.length-1:k,1)}setSnaps(a)}
 function findSnap(id){var r=null;getSnaps().forEach(function(s){if(s.id===id)r=s});return r}
 function delSnap(id){setSnaps(getSnaps().filter(function(s){return s.id!==id}))}
@@ -1238,6 +1252,7 @@ function lastFileBackup(){try{return localStorage.getItem(KEY_BK)}catch(e){retur
 function backupDue(){var b=lastFileBackup(),n=Object.keys(S.weeks).filter(function(k){return S.weeks[k]&&S.weeks[k].validated}).length;if(!n)return false;return!b||(Date.now()-new Date(b))>30*864e5}
 function viewSnaps(){var a=getSnaps(),bk=lastFileBackup(),out='<h2>Sauvegardes</h2>';
   if(backupDue())out+='<div class="banner warn">Aucun fichier de sauvegarde depuis plus de 30 jours. Exporte-en un dans Fichiers ou iCloud Drive.</div>';
+  out+=rescueKept();
   out+='<div class="card pad"><div class="tiny">Les sauvegardes de la liste restent dans l\'appli : elles protègent d\'une erreur de saisie, pas d\'une suppression de l\'appli. Pour ça, exporte un fichier de temps en temps.</div>'+
     '<div class="tiny">Dernier fichier exporté : '+(bk?fmtDT(bk):'jamais')+'</div>'+
     '<div class="btns"><button class="btn" data-act="snapnew">Sauvegarder maintenant</button><button class="btn" data-act="snapexp" data-id="">Exporter un fichier</button></div>'+
@@ -1250,6 +1265,58 @@ function viewSnaps(){var a=getSnaps(),bk=lastFileBackup(),out='<h2>Sauvegardes</
     '<button class="btn small" data-act="snapexp" data-id="'+s.id+'" aria-label="Exporter">⤓</button>'+
     '<button class="btn small danger'+(cd?' primary':'')+'" data-act="snapdel" data-id="'+s.id+'" aria-label="Supprimer">'+(cd?'Supprimer ?':'✕')+'</button></div></div>'});
   out+='</div>';return out}
+
+/* ----- Mode secours (données illisibles au démarrage) -----
+   Principe : tant que l'utilisateur n'a pas choisi, RIEN n'est écrit (voir persist, touch, syncNow, addSnap).
+   Quel que soit son choix, le texte illisible est d'abord copié sous la clé KEY_RESCUE (rescueDone),
+   d'où il peut encore être exporté depuis Réglages › Sauvegardes. */
+var KEY_RESCUE="feuille-heures-illisible";
+/* Écran de secours : remplace toute l'appli. Les boutons proposés dépendent de ce qui existe sur l'appareil. */
+function viewRescue(){var e=S.readErr,sn=getSnaps();
+  var h='<main><div class="wrap" style="max-width:520px;padding-top:32px"><section><div class="card pad" role="alert">'+
+    '<b style="font-size:19px">'+(e.recent?'Ces données viennent d\'une version plus récente':'Tes données n\'ont pas pu être lues')+'</b>'+
+    '<div style="font-size:14.5px;color:var(--muted)">Rien n\'a été modifié ni effacé. '+(e.recent?'Cet appareil utilise encore une ancienne version de l\'appli : recharge la page pour la mettre à jour.':'Choisis quoi faire avant de continuer.')+'</div>';
+  if(e.recent)h+='<button class="btn primary" data-act="rsreload">Recharger la page</button>';
+  if(sn.length)h+='<button class="btn" data-act="rssnap">Restaurer la sauvegarde du '+esc(fmtDT(sn[0].date))+'</button>';
+  if(SY.api)h+='<button class="btn" data-act="rssheet">Récupérer depuis le Google Sheet</button>';
+  h+='<label class="btn" for="imp" style="text-align:center">Importer un fichier de sauvegarde…</label><input type="file" id="imp" accept=".json,application/json" hidden>'+
+    '<button class="btn" data-act="rsexport">Exporter les données brutes</button>'+
+    '<button class="reset'+(S.confirm==="rszero"?' primary':'')+'" data-act="rszero">'+(S.confirm==="rszero"?'Confirmer : repartir d\'une appli vide ?':'Repartir d\'une appli vide')+'</button>'+
+    '<div class="tiny">Quel que soit ton choix, les données illisibles restent de côté sur cet appareil : tu pourras encore les exporter dans Réglages › Sauvegardes.</div>';
+  return h+'</div></section></div></main>'}
+/* Met le texte illisible de côté puis quitte le mode secours. Retourne false (et reste en mode secours)
+   si la copie est impossible : on n'écrase jamais le seul exemplaire. */
+function rescueDone(){var e=S.readErr;if(!e)return true;
+  try{localStorage.setItem(KEY_RESCUE,JSON.stringify({date:new Date().toISOString(),raw:e.raw}))}
+  catch(x){toast("Stockage plein : exporte d'abord les données brutes");return false}
+  S.readErr=null;S.confirm=null;return true}
+/* Téléchargement du texte illisible, tel quel (en mode secours, ou plus tard depuis Sauvegardes). */
+function rescueExport(){var raw=S.readErr?S.readErr.raw:null;if(raw==null){try{raw=JSON.parse(localStorage.getItem(KEY_RESCUE)).raw}catch(x){}}
+  if(raw==null){toast("Rien à exporter");return}
+  shareFile(new Blob([raw],{type:"text/plain"}),"feuille-heures-donnees-brutes-"+ymdStr(new Date())+".txt","Données brutes Feuille d'heures")}
+/* Rappel, dans Réglages › Sauvegardes, des données mises de côté (rien n'est affiché s'il n'y en a pas). */
+function rescueKept(){var k=null;try{k=JSON.parse(localStorage.getItem(KEY_RESCUE))}catch(x){}if(!k)return'';
+  return'<div class="banner info"><span>Des données illisibles du '+esc(fmtDT(k.date))+' sont gardées de côté.</span><span class="btns"><button class="btn small" data-act="rsexport">Exporter</button><button class="btn small danger'+(S.confirm==="rsforget"?' primary':'')+'" data-act="rsforget">'+(S.confirm==="rsforget"?'Supprimer ?':'Supprimer')+'</button></span></div>'}
+/* Boutons de l'écran de secours. */
+function rescueAct(a){
+  if(a==="rsreload"){location.reload()}
+  else if(a==="rsexport"){rescueExport()}
+  else if(a==="rszero"){if(S.confirm!=="rszero"){S.confirm="rszero";render();return}if(!rescueDone())return;persist();render();toast("Appli remise à vide")}
+  else if(a==="rssnap"){var s=getSnaps()[0];if(!s)return;
+    try{applyData(JSON.parse(JSON.stringify(s.data)))}catch(x){S.settings=defaultSettings(S.cur);S.weeks={};toast("Cette sauvegarde est illisible elle aussi");return}
+    if(!rescueDone()){S.settings=defaultSettings(S.cur);S.weeks={};return}
+    persist();render();toast("Sauvegarde du "+fmtDT(s.date)+" restaurée");
+    /* Avec la synchro : on relit tout le Sheet par-dessus (il est au moins aussi récent que la sauvegarde). */
+    if(SY.api){SY.meta={};SY.dirty={};SY.last=0;syncAdopt().then(function(){render()},function(x){SY.err=String(x&&x.message||x);saveSync();render()})}}
+  else if(a==="rssheet"){rescueSheet()}}
+/* Reconstruit les données de l'appareil à partir du Google Sheet. Rien n'est remplacé si le Sheet ne répond pas ou est vide. */
+async function rescueSheet(){toast("Récupération en cours…");var p;
+  try{p=await syncApi("pull",{since:0})}catch(x){toast("Récupération impossible : "+(x&&x.message||x));return}
+  var items=p.items||[];if(!items.length){toast("Le Google Sheet ne contient aucune donnée");return}
+  if(!rescueDone())return;
+  S.settings=defaultSettings(S.cur);S.weeks={};SY.meta={};SY.dirty={};
+  items.forEach(applyRemote);SY.last=Math.max(0,(p.now||0)-10000);SY.lastOk=Date.now();SY.err="";saveSync();persist();render();
+  toast(items.length+" élément(s) récupéré(s) depuis le Google Sheet")}
 
 /* ----- Fiche dans le corps du mail ----- */
 function h2m(m){if(!m&&m!==0)return"";m=Math.round(m);return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
@@ -1490,9 +1557,10 @@ async function shareFile(blob,name,title,text){
   var url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},4000);return true}
 function backup(){var name="feuille-heures-sauvegarde-"+new Date().toISOString().slice(0,10)+".json";
   shareFile(new Blob([JSON.stringify(snapshot(),null,1)],{type:"application/json"}),name,"Sauvegarde feuille d'heures").then(function(ok){if(ok){try{localStorage.setItem(KEY_BK,new Date().toISOString())}catch(e){}render();toast("Sauvegarde créée")}})}
-function restore(file){var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);if(d.app!=="feuille-heures")throw 0;if(+d.format>SCHEMA){toast("Ce fichier vient d'une version plus récente de l'appli : recharge la page puis réessaie");return}
-    if(d.kind==="historique"){addSnap("Avant import de l'historique",true);var n=0,cw=cleanWeeks(d.weeks);d.weeks=cw.weeks;Object.keys(d.weeks).forEach(function(k){var cur=S.weeks[k];var empty=!cur||!(cur.days||[]).some(function(x){return x&&x.type&&!x.auto});if(empty){S.weeks[k]=d.weeks[k];touch("w:"+k);n++}});
-      if(d.cpt){S.settings.cpt=Object.assign({},S.settings.cpt||{},d.cpt);touch("settings")}migrate();persist();render();toast(n+" semaine(s) ajoutée(s)"+(d.cpt?", compteurs mis à jour":""));return}addSnap("Avant import",true);applyData(d);persist();markAllDirty();render();toast("Données importées"+(S.badWeeks?" ("+S.badWeeks+" semaine(s) illisible(s) ignorée(s))":""))}catch(e){toast("Ce fichier n'est pas une sauvegarde de Feuille d'heures")}};r.readAsText(file)}
+function restore(file){var r=new FileReader(),re=S.readErr;r.onload=function(){try{var d=JSON.parse(r.result);if(d.app!=="feuille-heures")throw 0;if(+d.format>SCHEMA){toast("Ce fichier vient d'une version plus récente de l'appli : recharge la page puis réessaie");return}
+    if(re&&!rescueDone())return;/* mode secours : les données illisibles sont mises de côté avant d'être remplacées */
+    if(d.kind==="historique"){if(!re)addSnap("Avant import de l'historique",true);var n=0,cw=cleanWeeks(d.weeks);d.weeks=cw.weeks;Object.keys(d.weeks).forEach(function(k){var cur=S.weeks[k];var empty=!cur||!(cur.days||[]).some(function(x){return x&&x.type&&!x.auto});if(empty){S.weeks[k]=d.weeks[k];touch("w:"+k);n++}});
+      if(d.cpt){S.settings.cpt=Object.assign({},S.settings.cpt||{},d.cpt);touch("settings")}migrate();persist();render();toast(n+" semaine(s) ajoutée(s)"+(d.cpt?", compteurs mis à jour":""));return}if(!re)addSnap("Avant import",true);applyData(d);persist();markAllDirty();render();toast("Données importées"+(S.badWeeks?" ("+S.badWeeks+" semaine(s) illisible(s) ignorée(s))":""))}catch(e){if(re){S.readErr=re;S.settings=defaultSettings(S.cur);S.weeks={}}toast("Ce fichier n'est pas une sauvegarde de Feuille d'heures")}};r.readAsText(file)}
 /* ----- Export Excel ----- */
 async function doExport(validate){
   if(typeof ExcelJS==="undefined"){toast("Le module Excel n'a pas chargé. Recharge la page.");return}
