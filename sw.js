@@ -1,6 +1,8 @@
 // Feuille d'heures — fonctionnement hors connexion
-const CACHE = "feuille-heures-v16";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
+const CACHE = "feuille-heures-v17";
+const ASSETS = ["./", "./index.html", "./css/style.css",
+  "./js/actions.js", "./js/app.js", "./js/calculs.js", "./js/compta.js", "./js/compteurs.js", "./js/ecran-bilan.js", "./js/ecran-compteurs.js", "./js/ecran-envoi.js", "./js/ecran-reglages.js", "./js/ecran-rendu.js", "./js/ecran-semaine.js", "./js/ecran-verification.js", "./js/etat.js", "./js/excel.js", "./js/fiche.js", "./js/outils.js", "./js/sauvegardes.js", "./js/secours.js", "./js/stockage.js", "./js/synchro.js",
+  "./manifest.webmanifest", "./icon-180.png", "./icon-192.png", "./icon-512.png"];
 const EXCEL = "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js";
 
 self.addEventListener("install", e => {
