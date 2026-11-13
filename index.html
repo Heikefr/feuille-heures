@@ -315,7 +315,8 @@ main.dbody{padding:16px 22px 30px}
 .swhos{display:grid;gap:5px}.swho{display:flex;gap:10px;align-items:center;background:var(--sunk);border-radius:8px;padding:7px 10px;font-size:14px;min-width:0}.swho small{color:var(--muted);width:22px;flex:none}.swho span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sobj{font-size:13.5px;color:var(--muted)}.sobj b{color:var(--fg)}
 .sgrow{flex:1;min-height:8px}
-.sgo{width:100%;padding:14px;font-size:16px}
+.sgo{width:100%;padding:14px;font-size:16px;text-align:center;text-decoration:none;display:block}
+.ftaille{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}.ftaille .seg button{padding:5px 10px;font-size:12.5px}
 .ssteps{margin:0;padding-left:20px;display:grid;gap:4px;font-size:13.5px}
 .slinks{border-top:1px solid var(--line);padding-top:9px;font-size:12.5px;color:var(--muted)}
 @media (max-width:899px){.sendov{align-items:stretch}.sendm{width:100%;max-height:none;height:100%;border-radius:0;grid-template-columns:1fr;grid-template-rows:auto auto 1fr;overflow:auto}.sendf{padding:10px}.sendh{padding-top:max(12px,env(safe-area-inset-top))}.sendr{padding-bottom:max(18px,env(safe-area-inset-bottom))}}
@@ -778,21 +779,22 @@ function viewSend(){var w=week(),st=S.settings,c=weekCalc(w,st),u=sendUrls(),n=+
   var steps=D?['La fiche est copiée'+(w.validated?'.':' et la semaine passe en «\u00a0envoyée\u00a0».'),'Outlook s\'ouvre avec les destinataires et l\'objet.','Clique dans le message et colle avec <b>Ctrl+V</b>.']:['La fiche est copiée'+(w.validated?'.':', la semaine passe en «\u00a0envoyée\u00a0».'),'Outlook s\'ouvre, destinataires et objet remplis.','Dans le message : appui long puis <b>Coller</b>.'];
   return'<div class="sendov" role="dialog" aria-modal="true" aria-label="Envoyer la fiche"><div class="sendbg" data-act="sendclose"></div><div class="sendm">'+
     '<div class="sendh"><b>'+(w.validated?'Renvoyer la fiche S'+n:D?'Envoyer la semaine '+n+' au service paye':'Envoyer la S'+n)+'</b><button class="btn small" data-act="sendclose">✕ Fermer</button></div>'+
-    '<div class="sendf"><div class="slab">Ce qui partira dans le mail</div><img class="fiche-img" alt="Fiche de la semaine '+n+'" src="'+ficheCanvas(w,c,st).toDataURL("image/png")+'"></div>'+
+    '<div class="sendf"><div class="slab">Ce qui partira dans le mail</div><img class="fiche-img" alt="Fiche de la semaine '+n+'" src="'+ficheCanvas(w,c,st).toDataURL("image/png")+'"><div class="ftaille"><span>Taille dans le mail</span><div class="seg">'+Object.keys(FT).map(function(k){return'<button class="'+((st.ficheT||"l")===k?'on':'')+'" data-act="ftaille" data-v="'+k+'">'+FT[k][1]+'</button>'}).join("")+'</div><small>'+Math.round(FT[st.ficheT||"l"][0]*1000)+' px de large</small></div></div>'+
     '<div class="sendr"><div class="slab">Destinataires</div><div class="swhos">'+who+'</div><div class="sobj">Objet : <b>'+esc(u.subj)+'</b></div>'+
     (w.validated?'<div class="tiny">Envoyée le '+esc(w.sentAt||'')+'. La renvoyer ne change rien dans l\'appli.</div>':'')+
-    '<div class="sgrow"></div><button class="btn primary sgo" data-act="sendgo" data-m="ol"'+(u.to.length?'':' disabled')+'>Copier la fiche et ouvrir Outlook</button>'+
-    (S.sendFail?'<div class="banner warn" style="display:block">La copie automatique n\'a pas marché. '+(D?'Fais un clic droit sur la fiche puis « Copier l\'image »':'Fais un appui long sur la fiche puis « Copier »')+', puis <button class="linkbtn" data-act="sendgo" data-m="nocopy">ouvre Outlook quand même</button>.</div>':'')+
+    '<div class="sgrow"></div>'+(u.to.length?'<a class="btn primary sgo" href="'+esc(u.ol)+'" data-act="sendgo" data-m="ol">Copier la fiche et ouvrir Outlook</a>':'<button class="btn primary sgo" disabled>Copier la fiche et ouvrir Outlook</button>')+
+    (S.sendFail?'<div class="banner warn" style="display:block">La copie automatique n\'a pas marché. '+(D?'Fais un clic droit sur la fiche puis « Copier l\'image »':'Fais un appui long sur la fiche puis « Copier »')+', puis <a class="linkbtn" href="'+esc(u.ol)+'" data-act="sendgo" data-m="nocopy">ouvre Outlook</a>.</div>':'')+
     '<ol class="ssteps">'+steps.map(function(x){return'<li>'+x+'</li>'}).join("")+'</ol>'+
-    '<div class="slinks">Pas Outlook ? <button class="linkbtn" data-act="sendgo" data-m="mail">Autre messagerie</button> · <button class="linkbtn" data-act="export">Fichier Excel</button></div></div></div></div>'}
-function sendGo(mode){var w=week(),st=S.settings,c=weekCalc(w,st),u=sendUrls();
-  var fin=function(ok){if(!ok&&mode!=="nocopy"){S.sendFail=true;render();toast("Copie impossible : copie l'image à la main");return}
-    if(!w.validated){var now=new Date();w.validated=true;w.sentAt=fmtD(now)+"/"+now.getFullYear()+" à "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");saveWeek();addSnap("Fiche S"+(+S.cur.slice(6))+" validée",true)}
-    S.send=false;S.sendFail=false;S.lastExport=S.cur;render();toast(ok?"Fiche copiée : colle-la dans le message":"Semaine marquée envoyée");
-    location.href=mode==="mail"?u.mt:u.ol};
-  if(mode==="nocopy"){fin(false);return}
-  try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({"image/png":ficheBlob(w,c,st)})]).then(function(){fin(true)},function(){fin(false)});return}}catch(e){}
-  fin(false)}
+    '<div class="slinks">Pas Outlook ? <a class="linkbtn" href="'+esc(u.mt)+'" data-act="sendgo" data-m="mail">Autre messagerie</a> · <button class="linkbtn" data-act="export">Fichier Excel</button></div></div></div></div>'}
+function sendGo(mode){var w=week(),st=S.settings,c=weekCalc(w,st),done=false;
+  if(!w.validated){var now=new Date();w.validated=true;w.sentAt=fmtD(now)+"/"+now.getFullYear()+" à "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");saveWeek();addSnap("Fiche S"+(+S.cur.slice(6))+" validée",true)}
+  S.lastExport=S.cur;
+  var later=function(f){setTimeout(f,350)};
+  var ok=function(){if(done)return;done=true;later(function(){S.send=false;S.sendFail=false;render();toast("Fiche copiée : colle-la dans le message")})};
+  var ko=function(){if(done)return;done=true;later(function(){S.send=true;S.sendFail=true;render();toast("Copie impossible : copie l'image à la main")})};
+  if(mode==="nocopy"){later(function(){S.send=false;S.sendFail=false;render()});return}
+  try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({"image/png":ficheBlob(w,c,st)})]).then(ok,ko);return}}catch(e){}
+  ko()}
 function soldeApres(w,c){var s=soldeCalc(S.settings,S.weeks).solde;return w.validated?s:s+c.net}
 function copyLine(l,v){return'<div class="field"><span class="lbl">'+l+'</span><div class="copyline"><code>'+esc(v||"(à renseigner dans Réglages)")+'</code><button class="btn small" data-act="copy" data-v="'+esc(v||"")+'">Copier</button></div></div>'}
 function subject(){var p=S.settings.profil;return"Feuille d'heures S"+(+S.cur.slice(6))+" "+S.cur.slice(0,4)+(p.nom?" – "+p.nom:"")+(p.matricule?" ("+p.matricule+")":"")}
@@ -998,6 +1000,7 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   else if(a==="sendopen"){S.send=true;S.sendFail=false;render()}
   else if(a==="sendclose"){S.send=false;S.sendFail=false;render()}
   else if(a==="sendgo"){sendGo(el.dataset.m)}
+  else if(a==="ftaille"){S.settings.ficheT=el.dataset.v;saveSettings();render()}
   else if(a==="dmode"){S.dprev=el.dataset.m==="1";render()}
   else if(a==="dkeys"){S.dkeys=!S.dkeys;render()}
   else if(a==="dgo"){S.tab=el.dataset.t;S.verif=false;S.setPage=el.dataset.p||null;S.year=null;render();window.scrollTo(0,0)}
@@ -1234,8 +1237,10 @@ function ficheData(w,c,st){var days=w.days.map(function(d){return d||{}}),F={mat
     if(x.congeP)obs.push(DAYL[i]+" "+fmtD(dt)+" : "+hm(x.congeP)+" de congé payé posé.");}
   String(w.obs||"").split(/\n/).forEach(function(l){if(l.trim())obs.push(l.trim())});
   F.obs=obs.slice(0,6);F.net=c.net;return F}
-function ficheCanvas(w,c,st){var cv=document.createElement("canvas"),F=ficheData(w,c,st);
-  var W=1000,H=720,SC=2;cv.width=W*SC;cv.height=H*SC;var x=cv.getContext("2d");x.scale(SC,SC);
+var FT={s:[0.9,"Petite"],m:[1.2,"Moyenne"],l:[1.5,"Grande"],xl:[2,"Très grande"]};
+function ficheScale(st){return(FT[st.ficheT]||FT.l)[0]}
+function ficheCanvas(w,c,st,sc){var cv=document.createElement("canvas"),F=ficheData(w,c,st);
+  var W=1000,H=720,SC=sc||2;cv.width=W*SC;cv.height=H*SC;var x=cv.getContext("2d");x.scale(SC,SC);
   var Y="#FFFDB0",LINE="#555",GRAY="#D6D6CC",SERIF='"Times New Roman",Times,serif',SANS='Arial,Helvetica,sans-serif';
   x.fillStyle=Y;x.fillRect(0,0,W,H);
   function rect(a,b,w,h,fill){if(fill){x.fillStyle=fill;x.fillRect(a,b,w,h)}x.strokeStyle=LINE;x.lineWidth=1;x.strokeRect(a+.5,b+.5,w,h)}
@@ -1265,7 +1270,7 @@ function ficheCanvas(w,c,st){var cv=document.createElement("canvas"),F=ficheData
   y+=14;txt("OBSERVATIONS :",L0+40,y+12,{bold:1,size:12});
   F.obs.forEach(function(l,i){txt(l,L0+170,y+12+i*18,{size:13,color:"#1b2a7a"})});
   return cv}
-function ficheBlob(w,c,st){var cv=ficheCanvas(w,c,st);return new Promise(function(res){cv.toBlob(function(b){res(b)},"image/png")})}
+function ficheBlob(w,c,st){var cv=ficheCanvas(w,c,st,ficheScale(st));return new Promise(function(res){cv.toBlob(function(b){res(b)},"image/png")})}
 
 /* ----- Vérification avec la compta ----- */
 var COMPTA={CP:"Congé",CGPP:"Congé",CPSUP:"Congé supp.",ANC:"Congé supp.",RHT:"Récup",REC:"Récup",RC:"Récup",JF:"Férié",MAL:"Maladie",FOR:"Formation",FORM:"Formation"};
