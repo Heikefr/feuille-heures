@@ -53,7 +53,8 @@ function selClass(d, dc) {
 
 /** Horaire théorique d'un jour travaillé : { s : début, e : fin, t : durée }, ou null. */
 function theoRange(d, i) {
-  var st = S.settings, sc = /^sch:/.test(d.type || "") ? schedFor(st, d.type.slice(4), i) : null, s = sc ? sc.start : d.start, p = sc ? sc.pause : +d.pause || 0, dc = dayCalc(d, i, st);
+  var st = S.settings, sc = /^sch:/.test(d.type || "") ? schedFor(st, d.type.slice(4), i) : null, s = sc ? sc.start
+      : d.start, p = sc ? sc.pause : +d.pause || 0, dc = dayCalc(d, i, st);
   if (!dc.theo) return null;
   return { s, e: s + dc.theo + p, t: dc.theo };
 }
@@ -75,10 +76,12 @@ function primes(dc) {
  * l'une des deux est masquée par le CSS), puis résumé et actions.
  */
 function viewWeek() {
-  var st = S.settings, w = week(), c = weekCalc(w, st), mon = monOfKey(S.cur), out = "<section>", lock = w.validated ? " disabled" : "", D = S.desk, P = D && S.dprev;
+  var st = S.settings, w = week(), c = weekCalc(w, st), mon = monOfKey(S.cur), out = "<section>", lock = w.validated ? " disabled"
+      : "", D = S.desk, P = D && S.dprev;
   if (S.storeErr) out += '<div class="banner warn">Impossible de lire les données enregistrées sur cet appareil.</div>';
   if (!st.profil.nom && !D) out += '<div class="banner info">Renseigne ton profil et les adresses mail dans Réglages. <button class="btn small" data-act="tab" data-t="set">Ouvrir</button></div>';
-  if (w.validated) out += '<div class="banner ok"><span>Envoyée' + (w.sentAt ? " le " + esc(w.sentAt) : "") + '. Semaine verrouillée.</span><button class="btn small" data-act="reopen">Modifier</button></div>';
+  if (w.validated) out += '<div class="banner ok"><span>Envoyée' + (w.sentAt ? " le " + esc(w.sentAt) : "")
+      + '. Semaine verrouillée.</span><button class="btn small" data-act="reopen">Modifier</button></div>';
   else {
     out += '<div class="quick" aria-label="Remplir lundi à vendredi"><span class="qlbl">Remplir :</span>';
     st.horaires.forEach(function(h) {
@@ -130,9 +133,11 @@ function viewWeek() {
     var tot = wk ? hm(dc.worked) : dc.abs && dc.counted ? hm(dc.counted) : "";
     ph += '<div class="prow' + (!wk && !dc.abs ? " off" : "") + '"><div class="pday"><b>' + DAYN[i] + "</b><span>"
         + fmtD(dt) + '</span></div><div class="pmid">' + sel + (wk ? '<div class="preal">' + tin("start") + "<span>→</span>"
-        + tin("end") + (tr ? '<span class="ptheo">théo ' + toTime(tr.s) + "–" + toTime(tr.e) + "</span>" : "") + '</div><div class="pinf"><span>Supp <b class="supp">'
+        + tin("end") + (tr ? '<span class="ptheo">théo ' + toTime(tr.s) + "–" + toTime(tr.e) + "</span>" : "")
+            + '</div><div class="pinf"><span>Supp <b class="supp">'
         + (c.hsDay[i] ? hm(c.hsDay[i]) : "0:00") + '</b></span><span>Nuit <b class="nuit">' + (dc.night ? hm(dc.night) : "0:00")
-        + "</b></span>" + pause + primes(dc) + more + "</div>" : notes.length || more ? '<div class="pinf">' + (dc.abs === "recup" ? "<span>débit du compteur</span>" : "")
+        + "</b></span>" + pause + primes(dc) + more + "</div>" : notes.length || more ? '<div class="pinf">'
+            + (dc.abs === "recup" ? "<span>débit du compteur</span>" : "")
         + more + "</div>" : "") + (notes.length ? '<div class="pnote">' + esc(notes.join(" · ")) + "</div>" : "") + '</div><div class="ptot"><b'
         + (dc.alerte ? ' class="negc"' : "") + ">" + tot + "</b>" + (dc.abs && dc.counted ? "<span>compté</span>" : "")
         + "</div></div>";
@@ -209,7 +214,8 @@ function weekStatus(k) {
 
 /** Vue année : toutes les semaines mois par mois, colorées selon leur état ; appui long pour noter ou poser des congés. */
 function viewYear() {
-  var y = S.year, M = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"], by = {};
+  var y = S.year, M = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre",
+      "Octobre", "Novembre", "Décembre"], by = {};
   var k = keyOf(mondayOf(new Date(y, 0, 4)));
   while (+k.slice(0, 4) === y) {
     var th = monOfKey(k);
@@ -224,7 +230,8 @@ function viewYear() {
     var k2 = S.yEdit, w = S.weeks[k2] || {};
     return '<div class="yedit"><b>Semaine ' + +k2.slice(6) + " · du " + fmtD(dayDate(k2, 0)) + " au " + fmtD(dayDate(k2, 6))
         + '</b><label class="wnote"><span>Note</span><input type="text" data-act="ynote" data-k="' + k2 + '" placeholder="Ex. Vacances, Formation soudure…" value="'
-        + esc(w.note || "") + '"></label><div class="btns"><button class="btn small" data-act="ygo" data-k="' + k2 + '">Ouvrir la semaine</button><button class="btn small" data-act="yedclose">Fermer</button></div><span class="tiny">Poser lundi–vendredi en :</span>'
+        + esc(w.note || "") + '"></label><div class="btns"><button class="btn small" data-act="ygo" data-k="'
+            + k2 + '">Ouvrir la semaine</button><button class="btn small" data-act="yedclose">Fermer</button></div><span class="tiny">Poser lundi–vendredi en :</span>'
         + congeChooser(k2).replace('<button class="btn small ghost" data-act="pickno">Annuler</button>', "") + "</div>";
   })() : `<div class="tiny">Touche une semaine pour l'ouvrir. Appui long : note ou congé.</div>`);
   M.forEach(function(m, i) {
@@ -243,8 +250,10 @@ function viewYear() {
       }
       if (mark.indexOf("c") === 0 || mark.indexOf("n") === 0) c = c.replace("dr", "");
       return '<button class="yw ' + (mark ? mark + " " + c.replace("dr", "") : c) + (k2 === today ? " cur" : "")
-          + (k2 === S.cur ? " sel" : "") + '" data-act="ygo" data-k="' + k2 + '" aria-label="' + libelleSemaine(+k2.slice(6), weekStatus(k2), k2 === today)
-          + (w && w.check ? (w.check.bad ? ", écart avec la compta" : ", vérifiée avec la compta") : "") + '">S' + k2.slice(6) + (w && w.check ? '<em class="ychk'
+          + (k2 === S.cur ? " sel" : "") + '" data-act="ygo" data-k="' + k2 + '" aria-label="' + libelleSemaine(+k2.slice(6),
+              weekStatus(k2), k2 === today)
+          + (w && w.check ? (w.check.bad ? ", écart avec la compta" : ", vérifiée avec la compta") : "") + '">S'
+              + k2.slice(6) + (w && w.check ? '<em class="ychk'
           + (w.check.bad ? " bad" : "") + '">' + (w.check.bad ? "!" : "✓") + "</em>" : "") + "</button>";
     }).join("") + "</div></div>";
     var nn = by[i].filter(function(k2) {
@@ -285,7 +294,8 @@ function viewSheet() {
       return "<option" + (d.team === t ? " selected" : "") + ">" + t + "</option>";
     }).join("") + "</select></div>";
     var c = dayCalc(d, i, st);
-    times += '<div class="tiny mono">Travaillé ' + hm(c.worked) + (c.night ? " · nuit " + hm(c.night) : "") + (c.panier ? " · primes panier + équipe" : "")
+    times += '<div class="tiny mono">Travaillé ' + hm(c.worked) + (c.night ? " · nuit " + hm(c.night) : "")
+        + (c.panier ? " · primes panier + équipe" : "")
         + "</div>";
   }
   var x = d.x || {}, ex = "<details" + (EXTRAS.some(function(e) {

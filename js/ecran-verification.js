@@ -77,7 +77,8 @@ function verifCard(k) {
       + '" data-open="' + (open ? 1 : 0) + '"><span>S' + +k.slice(6) + " · " + fmtD(dayDate(k, 0)) + " – " + fmtD(dayDate(k, 6))
       + "</span><span>" + (ch.bad ? "✗ " + ch.bad + " écart" + (ch.bad > 1 ? "s" : "") : "✓ tout correspond") + "</span></button>";
   if (open) {
-    h += '<table class="vtab"><tr><th scope="col">Élément</th><th scope="col">Appli</th><th scope="col">Compta</th><th scope="col"><span class="lecteur">Résultat</span></th></tr>' + ch.items.map(function(x) {
+    h += '<table class="vtab"><tr><th scope="col">Élément</th><th scope="col">Appli</th><th scope="col">Compta</th><th scope="col"><span class="lecteur">Résultat</span></th></tr>'
+        + ch.items.map(function(x) {
       return '<tr class="' + (x.ok ? "" : "bad") + '"><td>' + esc(x.l) + (x.fav ? '<br><small style="font-weight:600">'
           + (x.fav > 0 ? "en ta faveur" : "en ta défaveur") + "</small>" : "") + "</td><td>" + esc(x.a) + "</td><td>" + esc(x.b)
           + "</td><td>" + (x.ok ? "✓" : "✗") + "</td></tr>";

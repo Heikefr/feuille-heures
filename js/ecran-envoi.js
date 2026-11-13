@@ -35,10 +35,14 @@ function viewSend() {
   if (!u.to.length) who = '<div class="banner warn">Aucune adresse du service paye. <button class="btn small" data-act="dgo" data-t="set" data-p="dest">Les saisir</button></div>';
   // Observations trop longues pour la fiche : on prévient, sans rien changer à la fiche.
   var enTrop = ficheObsEnTrop(w, c, st);
-  var obsAlerte = enTrop ? '<div class="banner warn"><span>' + (enTrop > 1 ? enTrop + " lignes d'observation ne tiennent pas" : "1 ligne d'observation ne tient pas")
-      + ' sur la fiche (6 lignes au plus). Elles ne seront pas envoyées.</span>' + (w.validated ? "" : '<span class="btns"><button class="btn small" data-act="obsfix">Raccourcir</button></span>') + "</div>" : "";
-  var steps = D ? ["La fiche est copiée" + (w.validated ? "." : " et la semaine passe en « envoyée »."), "Outlook s'ouvre avec les destinataires et l'objet.", "Clique dans le message et colle avec <b>Ctrl+V</b>."] : ["La fiche est copiée"
-      + (w.validated ? "." : ", la semaine passe en « envoyée »."), "Outlook s'ouvre, destinataires et objet remplis.", "Dans le message : appui long puis <b>Coller</b>."];
+  var obsAlerte = enTrop ? '<div class="banner warn"><span>' + (enTrop > 1 ? enTrop + " lignes d'observation ne tiennent pas"
+      : "1 ligne d'observation ne tient pas")
+      + ' sur la fiche (6 lignes au plus). Elles ne seront pas envoyées.</span>' + (w.validated ? "" : '<span class="btns"><button class="btn small" data-act="obsfix">Raccourcir</button></span>')
+          + "</div>" : "";
+  var steps = D ? ["La fiche est copiée" + (w.validated ? "." : " et la semaine passe en « envoyée »."), "Outlook s'ouvre avec les destinataires et l'objet.",
+      "Clique dans le message et colle avec <b>Ctrl+V</b>."] : ["La fiche est copiée"
+      + (w.validated ? "." : ", la semaine passe en « envoyée »."), "Outlook s'ouvre, destinataires et objet remplis.",
+          "Dans le message : appui long puis <b>Coller</b>."];
   return '<div class="sendov" role="dialog" aria-modal="true" aria-label="Envoyer la fiche"><div class="sendbg" data-act="sendclose"></div><div class="sendm"><div class="sendh"><b>'
       + (w.validated ? "Renvoyer la fiche S" + n : D ? "Envoyer la semaine " + n + " au service paye" : "Envoyer la S"
       + n) + '</b><button class="btn small" data-act="sendclose">✕ Fermer</button></div><div class="sendf"><div class="slab">Ce qui partira dans le mail</div><img class="fiche-img" alt="Fiche de la semaine '
@@ -48,8 +52,10 @@ function viewSend() {
   }).join("") + "</div><small>" + Math.round(FT[ficheTaille()][0] * 1e3) + ' px de large</small></div></div><div class="sendr"><div class="slab">Destinataires</div><div class="swhos">'
       + who + '</div><div class="sobj">Objet : <b>' + esc(u.subj) + "</b></div>" + (w.validated ? '<div class="tiny">Envoyée le '
       + esc(w.sentAt || "") + ". La renvoyer ne change rien dans l'appli.</div>" : "") + '<div class="sgrow"></div>' + obsAlerte
-      + (u.to.length ? '<a class="btn primary sgo" href="' + esc(u.ol) + '" data-act="sendgo" data-m="ol">Copier la fiche et ouvrir Outlook</a>' : '<button class="btn primary sgo" disabled>Copier la fiche et ouvrir Outlook</button>')
-      + (S.sendFail ? `<div class="banner warn" style="display:block">La copie automatique n'a pas marché. ` + (D ? "Fais un clic droit sur la fiche puis « Copier l'image »" : "Fais un appui long sur la fiche puis « Copier »")
+      + (u.to.length ? '<a class="btn primary sgo" href="' + esc(u.ol) + '" data-act="sendgo" data-m="ol">Copier la fiche et ouvrir Outlook</a>'
+          : '<button class="btn primary sgo" disabled>Copier la fiche et ouvrir Outlook</button>')
+      + (S.sendFail ? `<div class="banner warn" style="display:block">La copie automatique n'a pas marché. `
+          + (D ? "Fais un clic droit sur la fiche puis « Copier l'image »" : "Fais un appui long sur la fiche puis « Copier »")
       + ', puis <a class="linkbtn" href="' + esc(u.ol) + '" data-act="sendgo" data-m="nocopy">ouvre Outlook</a>.</div>' : "")
       + '<ol class="ssteps">' + steps.map(function(x) {
     return "<li>" + x + "</li>";
@@ -65,7 +71,8 @@ function sendGo(mode) {
   if (!w.validated) {
     var now = /* @__PURE__ */ new Date();
     w.validated = true;
-    w.sentAt = fmtD(now) + "/" + now.getFullYear() + " à " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+    w.sentAt = fmtD(now) + "/" + now.getFullYear() + " à " + String(now.getHours()).padStart(2, "0") + ":"
+        + String(now.getMinutes()).padStart(2, "0");
     saveWeek();
     addSnap("Fiche S" + +S.cur.slice(6) + " validée", true);
   }

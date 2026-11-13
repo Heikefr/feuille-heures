@@ -19,14 +19,17 @@ var KEY_RESCUE = "feuille-heures-illisible";
 function viewRescue() {
   var e = S.readErr, sn = getSnaps();
   var h = '<main><div class="wrap" style="max-width:520px;padding-top:32px"><section><div class="card pad" role="alert"><b style="font-size:19px">'
-      + (e.recent ? "Ces données viennent d'une version plus récente" : "Tes données n'ont pas pu être lues") + `</b><div style="font-size:14.5px;color:var(--muted)">Rien n'a été modifié ni effacé. `
-      + (e.recent ? "Cet appareil utilise encore une ancienne version de l'appli : recharge la page pour la mettre à jour." : "Choisis quoi faire avant de continuer.")
+      + (e.recent ? "Ces données viennent d'une version plus récente" : "Tes données n'ont pas pu être lues")
+          + `</b><div style="font-size:14.5px;color:var(--muted)">Rien n'a été modifié ni effacé. `
+      + (e.recent ? "Cet appareil utilise encore une ancienne version de l'appli : recharge la page pour la mettre à jour."
+          : "Choisis quoi faire avant de continuer.")
       + "</div>";
   if (e.recent) h += '<button class="btn primary" data-act="rsreload">Recharger la page</button>';
   if (sn.length) h += '<button class="btn" data-act="rssnap">Restaurer la sauvegarde du ' + esc(fmtDT(sn[0].date)) + "</button>";
   if (SY.api) h += '<button class="btn" data-act="rssheet">Récupérer depuis le Google Sheet</button>';
   h += '<label class="btn" for="imp" style="text-align:center">Importer un fichier de sauvegarde…</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn" data-act="rsexport">Exporter les données brutes</button><button class="reset'
-      + (S.confirm === "rszero" ? " primary" : "") + '" data-act="rszero">' + (S.confirm === "rszero" ? "Confirmer : repartir d'une appli vide ?" : "Repartir d'une appli vide")
+      + (S.confirm === "rszero" ? " primary" : "") + '" data-act="rszero">' + (S.confirm === "rszero" ? "Confirmer : repartir d'une appli vide ?"
+          : "Repartir d'une appli vide")
       + '</button><div class="tiny">Quel que soit ton choix, les données illisibles restent de côté sur cet appareil : tu pourras encore les exporter dans Réglages › Sauvegardes.</div>';
   return h + "</div></section></div></main>";
 }

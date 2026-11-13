@@ -58,7 +58,8 @@ function render() {
   var mon = monOfKey(S.cur), sun = new Date(mon);
   sun.setDate(sun.getDate() + 6);
   var w = week();
-  var ws = weekStatus(S.cur), status = ws === "s" ? '<span class="chip sent">Envoyée</span>' : ws === "dr" ? '<span class="chip draft">Brouillon</span>' : "";
+  var ws = weekStatus(S.cur), status = ws === "s" ? '<span class="chip sent">Envoyée</span>' : ws === "dr" ? '<span class="chip draft">Brouillon</span>'
+      : "";
   var head = '<header class="top"><div class="wrap"><div class="wk-nav"><button class="iconbtn" data-act="wk" data-n="-1" aria-label="Semaine précédente">'
       + ICON.prev + '</button><button class="wk-title" data-act="year" aria-label="Choisir une semaine"><b>Semaine '
       + +S.cur.slice(6) + "<i>" + (S.year != null ? "▴" : "▾") + "</i></b><span>" + fmtD(mon) + " – " + fmtD(sun) + "/"
@@ -96,7 +97,8 @@ function bandeauRemplacement() {
   var quoi = S.remplace;
   if (!quoi || !quoi.length) return "";
   var noms = quoi.filter(function(x, i) { return quoi.indexOf(x) === i; });
-  return '<div class="banner info" role="status"><span><b>' + esc(noms.join(", ")) + (noms.length > 1 ? " remplacés" : noms[0] === "Réglages" ? " remplacés" : " remplacée")
+  return '<div class="banner info" role="status"><span><b>' + esc(noms.join(", ")) + (noms.length > 1 ? " remplacés"
+      : noms[0] === "Réglages" ? " remplacés" : " remplacée")
       + ".</b> Une modification plus récente venait d'un autre appareil. Ta version d'ici est gardée dans les sauvegardes.</span>"
       + '<span class="btns"><button class="btn small" data-act="remplvoir">Voir les sauvegardes</button><button class="btn small" data-act="remplok">OK</button></span></div>';
 }
@@ -126,10 +128,13 @@ function deskShell(body, mon, sun, status) {
     return '<button class="dit' + (on ? " on" : "") + '" data-act="' + act + '"' + (t ? ' data-t="' + t + '"' : "")
         + "><span>" + l + "</span>" + (ex || "") + "</button>";
   };
-  var h = `<div class="dk"><aside class="dside"><div class="dbrand">Feuille d'heures</div><nav class="dnav">` + it("tab", "week", "Semaine", S.tab === "week" && !vf, '<span class="dcnt">S'
+  var h = `<div class="dk"><aside class="dside"><div class="dbrand">Feuille d'heures</div><nav class="dnav">`
+      + it("tab", "week", "Semaine", S.tab === "week" && !vf, '<span class="dcnt">S'
       + +cur.slice(6) + "</span>") + it("tab", "bank", "Compteurs", S.tab === "bank") + it("tab", "bilan", "Bilan", S.tab === "bilan")
       + it("tab", "set", "Réglages", S.tab === "set", !st.profil.nom ? '<i class="ddot"></i>' : "") + "</nav>";
-  var k0 = shiftKey(cur, -2), tk = keyOf(mondayOf(TODAY)), m0 = monOfKey(k0), m1 = monOfKey(shiftKey(k0, 9)), MO = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  var k0 = shiftKey(cur, -2), tk = keyOf(mondayOf(TODAY)), m0 = monOfKey(k0), m1 = monOfKey(shiftKey(k0, 9)),
+      MO = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre",
+      "décembre"];
   h += '<div class="dsec">' + MO[m0.getMonth()] + (m1.getMonth() !== m0.getMonth() ? " – " + MO[m1.getMonth()] : "")
       + " " + m1.getFullYear() + '</div><div class="dcal">';
   for (var i = 0; i < 10; i++) {
@@ -160,7 +165,8 @@ function deskShell(body, mon, sun, status) {
       + '</button><button class="iconbtn" data-act="wk" data-n="1" aria-label="Semaine suivante">' + ICON.next + "</button></div>";
   else h += "<h1>" + (S.tab === "bank" ? "Compteurs" : S.tab === "bilan" ? "Bilan" : "Réglages") + "</h1>";
   h += '<div class="dtools">' + (S.tab === "week" && !vf ? '<div class="seg"><button class="' + (S.dprev ? "" : "on")
-      + '" data-act="dmode" data-m="0">Saisie</button><button class="' + (S.dprev ? "on" : "") + '" data-act="dmode" data-m="1">Aperçu de la fiche</button></div>' : "")
+      + '" data-act="dmode" data-m="0">Saisie</button><button class="' + (S.dprev ? "on" : "") + '" data-act="dmode" data-m="1">Aperçu de la fiche</button></div>'
+          : "")
       + (S.tab === "bank" ? '<button class="btn small primary" data-act="sverif">Vérifier mes soldes avec la compta</button>' : "")
       + (S.tab === "bilan" ? '<button class="btn small primary" data-act="bexport">Exporter en Excel</button>' : "")
       + '<button class="btn small" data-act="dkeys" aria-pressed="' + !!S.dkeys + '">⌨ Raccourcis</button></div></header>';
@@ -182,7 +188,8 @@ function deskRecap(w, c, st) {
       + '<div class="dsep"></div>' + kv("Récup gagnée", "+" + hm(c.gain), "okc") + (c.debit ? kv("Récup posée", "−" + hm(c.debit)) : "")
       + kv(w.validated ? "Compteur de récup" : "Récup après envoi", hm(after)) + "</div>";
   h += '<div class="card pad dcard"><h4>Mes compteurs <button class="linkbtn" data-act="tab" data-t="bank">Tout voir</button></h4>'
-      + kv("Récup", hm(cn.recup.reste)) + kv("Congé principal", f(cn.cp)) + kv("5e semaine", f(cn.c5)) + (cn.frac.acq ? kv("Fractionnement", f(cn.frac)) : "")
+      + kv("Récup", hm(cn.recup.reste)) + kv("Congé principal", f(cn.cp)) + kv("5e semaine", f(cn.c5)) + (cn.frac.acq ? kv("Fractionnement",
+          f(cn.frac)) : "")
       + kv("Ancienneté · supp.", f(cn.anc) + " · " + f(cn.csup)) + kv("CET", hm(cn.cet.solde) + " / " + CET_MAX / 60)
       + "</div>";
   return h;
@@ -190,7 +197,8 @@ function deskRecap(w, c, st) {
 
 /** Bloc « Envoyer au service paye » du panneau de droite (PC). */
 function deskSend(w) {
-  return '<div class="card pad dcard dsend"><button class="btn primary" data-act="sendopen">' + (w.validated ? "Renvoyer la fiche" : "Envoyer au service paye")
+  return '<div class="card pad dcard dsend"><button class="btn primary" data-act="sendopen">' + (w.validated ? "Renvoyer la fiche"
+      : "Envoyer au service paye")
       + '</button><div class="tiny" style="text-align:center">' + (w.validated ? "Semaine déjà envoyée" : "Aperçu, destinataires puis Outlook")
       + ' · <kbd>Ctrl</kbd>+<kbd>Entrée</kbd></div><div class="dsub"><button class="btn small" data-act="obsbtn" aria-pressed="'
       + !!(S.showObs || w.obs) + '">Observ.</button><button class="btn small" data-act="verif" aria-pressed="' + !!S.verif

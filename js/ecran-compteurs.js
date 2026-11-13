@@ -40,7 +40,8 @@ function icsFor(list) {
       return B + m;
     }).split(String.fromCharCode(10)).join(B + "n");
   }
-  var now = (/* @__PURE__ */ new Date()).toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z", L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Feuille d'heures//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+  var now = (/* @__PURE__ */ new Date()).toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z", L = ["BEGIN:VCALENDAR",
+      "VERSION:2.0", "PRODID:-//Feuille d'heures//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
   list.forEach(function(x) {
     var end = new Date(x.b);
     end.setDate(end.getDate() + 1);
@@ -146,7 +147,8 @@ function cptCard(o) {
   var H = o.u === "h", f = function(v) {
     return H ? hm(v) : fmtJ(v) + " j";
   };
-  var big = f(o.reste), sm = H ? "≈ " + fmtJ(o.reste / 420) + " jour" + (Math.abs(o.reste) >= 840 ? "s" : "") : hm(o.reste * 420), tot = Math.max(o.acq, o.pris
+  var big = f(o.reste), sm = H ? "≈ " + fmtJ(o.reste / 420) + " jour" + (Math.abs(o.reste) >= 840 ? "s" : "")
+      : hm(o.reste * 420), tot = Math.max(o.acq, o.pris
       + o.prevu, 1e-4);
   var bar = '<div class="cbar"><i style="width:' + o.pris / tot * 100 + '%;background:var(--abs)"></i><i style="width:'
       + o.prevu / tot * 100 + '%;background:var(--note)"></i><i style="width:' + Math.max(0, o.reste) / tot * 100 + "%;background:"
@@ -154,7 +156,8 @@ function cptCard(o) {
   var h = '<div class="ccard' + (o.reste <= 0 ? " zero" : "") + '"><div class="ctop"><b>' + esc(o.n) + "</b><small>"
       + (o.prevu ? "reste après prévus" : "reste") + '</small></div><div class="cval"><span class="mono">' + big + "</span><span>"
       + sm + "</span></div>" + bar + '<div class="cleg"><span>Acquis <b>' + f(o.acq) + "</b></span><span>Pris <b>" + f(o.pris)
-      + "</b>" + (o.cet ? " dont CET " + f(o.cet) : "") + "</span><span>Prévu <b>" + f(o.prevu) + "</b></span>" + (S.fix === o.k ? "" : '<button class="linkbtn" data-act="fix" data-k="'
+      + "</b>" + (o.cet ? " dont CET " + f(o.cet) : "") + "</span><span>Prévu <b>" + f(o.prevu) + "</b></span>"
+          + (S.fix === o.k ? "" : '<button class="linkbtn" data-act="fix" data-k="'
       + o.k + '">Corriger</button>') + "</div>";
   if (S.fix === o.k) {
     var b = (S.settings.cpt || {})[o.k] || {};
@@ -213,7 +216,8 @@ function cetCard(o) {
       var c = cn[k], H = c.u === "h";
       return '<option value="' + k + '"' + (S.cetSrc === k ? " selected" : "") + ">" + esc(c.n) + " · " + (H ? hm(c.reste) : fmtJ(c.reste)
           + " j") + " dispo</option>";
-    }).join("") + '</select></div><div class="field"><label for="cf-q2">' + ((CPT_DEF[S.cetSrc || "recup"] || {}).u === "j" ? "Nombre de jours" : "Heures placées")
+    }).join("") + '</select></div><div class="field"><label for="cf-q2">' + ((CPT_DEF[S.cetSrc || "recup"]
+        || {}).u === "j" ? "Nombre de jours" : "Heures placées")
         + '</label><input type="text" id="cf-q2" placeholder="' + ((CPT_DEF[S.cetSrc || "recup"] || {}).u === "j" ? "1" : "35:00")
         + `"></div><div class="tiny">Le placement est appliqué tout de suite : retiré du compteur d'origine, ajouté au CET.</div><div class="btns"><button class="btn small primary" data-act="cetsave">Ajouter</button><button class="btn small" data-act="fixno">Annuler</button></div>`;
   } else h += '<div class="btns"><button class="btn small" data-act="fix" data-k="cetadd">+ Placement fait dans Pléiade</button><button class="btn small" data-act="fix" data-k="cet">Corriger</button></div>';
@@ -240,7 +244,8 @@ function saveCet(kind) {
     toast("CET mis à jour");
     return true;
   }
-  var k = document.getElementById("cf-src").value, u = CPT_DEF[k].u, raw = document.getElementById("cf-q2").value, q = u === "j" ? parseFloat(String(raw).replace(",", ".")) : parseHM(raw);
+  var k = document.getElementById("cf-src").value, u = CPT_DEF[k].u, raw = document.getElementById("cf-q2").value,
+      q = u === "j" ? parseFloat(String(raw).replace(",", ".")) : parseHM(raw);
   if (q == null || isNaN(q) || q <= 0) {
     toast("Quantité incorrecte");
     return false;

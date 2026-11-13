@@ -167,7 +167,8 @@ function ficheCanvas(w, c, st, sc) {
     var n = o.n || 7;
     rect(L0, y, LW, h, o.fill);
     (Array.isArray(label) ? label : [label]).forEach(function(l, i3, a2) {
-      txt(l, o.center ? L0 + LW / 2 : L0 + 8, y + h / 2 + (i3 - (a2.length - 1) / 2) * 14, { bold: o.bold, size: o.ls || 11.5, align: o.center ? "center" : "left" });
+      txt(l, o.center ? L0 + LW / 2 : L0 + 8, y + h / 2 + (i3 - (a2.length - 1) / 2) * 14, { bold: o.bold,
+          size: o.ls || 11.5, align: o.center ? "center" : "left" });
     });
     for (var i2 = 0; i2 < n; i2++) {
       rect(X0 + i2 * CW, y, CW, h, o.fill);
@@ -206,7 +207,8 @@ function ficheCanvas(w, c, st, sc) {
   rect(XT, y, TW, 24);
   rect(XT, y + 24, TW, 24);
   y += 48;
-  row(54, ["Nombre total d'heure de", "TRAVAIL  (G000)    ➡"], F.trav, F.travTot ? "➡  " + F.travTot : "", { bold: 1, ls: 12.5, vs: 16, center: 1, ts: 19 });
+  row(54, ["Nombre total d'heure de", "TRAVAIL  (G000)    ➡"], F.trav, F.travTot ? "➡  " + F.travTot : "",
+      { bold: 1, ls: 12.5, vs: 16, center: 1, ts: 19 });
   row(24, "Heures suppl à récupérer", F.hsr, F.hsrTot, { vb: 1 });
   row(24, "Heures suppl à payer", F.hsp, F.hspTot, { vb: 1 });
   var yn = y;
@@ -217,7 +219,9 @@ function ficheCanvas(w, c, st, sc) {
   row(24, "Prime de panier  3001", F.panier, null, { n: 6, noTot: 1 });
   row(24, "Prime d'équipe  3008", F.equipe, null, { n: 6, noTot: 1 });
   row(24, "Indemnité de Samedi  3006", F.sam, null, { n: 6, noTot: 1 });
-  [["Formation permanente (GA 40)", F.ga40], ["Grève AN", F.greve], ["Informations syndicales (GA 10)", F.ga10], ["Election Délégué Personnel CE", F.elec], ["Heures de Réunion  (GA 20)", F.ga20], ["Crédit d'heures       (GA 80)", F.ga80], ["Réunion info vœux   (G001)", F.g001]].forEach(function(r) {
+  [["Formation permanente (GA 40)", F.ga40], ["Grève AN", F.greve], ["Informations syndicales (GA 10)", F.ga10],
+      ["Election Délégué Personnel CE", F.elec], ["Heures de Réunion  (GA 20)", F.ga20], ["Crédit d'heures       (GA 80)",
+      F.ga80], ["Réunion info vœux   (G001)", F.g001]].forEach(function(r) {
     row(21, r[0], r[1], null, { n: 5, noTot: 1, ls: 10.5, vs: 13 });
   });
   y += 14;

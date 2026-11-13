@@ -277,7 +277,8 @@ app.addEventListener("click", function(e) {
   } else if (a === "pick") {
     var i = S.sheet, id = el.dataset.id, old = w.days[i] || {}, d;
     if (id === "") d = { x: old.x || {}, noFerie: !!ferieOf(dayDate(S.cur, i)) };
-    else if (id === "perso") d = { type: "perso", team: old.team || "Matin", start: old.start != null ? old.start : 360, end: old.end != null ? old.end : 795, pause: old.pause || 0, x: old.x || {} };
+    else if (id === "perso") d = { type: "perso", team: old.team || "Matin", start: old.start != null ? old.start
+        : 360, end: old.end != null ? old.end : 795, pause: old.pause || 0, x: old.x || {} };
     else if (ABS[id]) d = { type: id, x: old.x || {} };
     else d = applySched(i, id);
     setDay(i, d);
@@ -380,7 +381,8 @@ app.addEventListener("change", function(e) {
   if (a === "dtype") {
     var di = +el.dataset.i, v0 = el.value, od = w.days[di] || {}, nd;
     if (v0 === "") nd = { x: od.x || {}, noFerie: !!ferieOf(dayDate(S.cur, di)) };
-    else if (v0 === "perso") nd = { type: "perso", team: od.team || "Matin", start: od.start != null ? od.start : 360, end: od.end != null ? od.end : 795, pause: od.pause || 0, theo: 420, x: od.x || {} };
+    else if (v0 === "perso") nd = { type: "perso", team: od.team || "Matin", start: od.start != null ? od.start
+        : 360, end: od.end != null ? od.end : 795, pause: od.pause || 0, theo: 420, x: od.x || {} };
     else if (ABS[v0]) nd = { type: v0, x: od.x || {} };
     else nd = applySched(di, v0.slice(4));
     w.days[di] = nd;
@@ -564,7 +566,8 @@ document.addEventListener("keydown", function(e) {
     render();
     return;
   }
-  if (!inF && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === "ArrowLeft" || e.key === "ArrowRight") && S.tab === "week" && S.sheet == null && S.year == null) {
+  if (!inF && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === "ArrowLeft" || e.key === "ArrowRight") && S.tab === "week"
+      && S.sheet == null && S.year == null) {
     e.preventDefault();
     goWeek(e.key === "ArrowLeft" ? -1 : 1);
   }

@@ -21,14 +21,17 @@ import { addSnap } from "./sauvegardes.js";
 import { render } from "./ecran-rendu.js";
 
 /** Code d'absence du logiciel → catégorie comparée à l'appli. */
-var COMPTA = { CP: "Congé", CGPP: "Congé", CPSUP: "Congé supp.", ANC: "Congé supp.", RHT: "Récup", REC: "Récup", RC: "Récup", JF: "Férié", MAL: "Maladie", FOR: "Formation", FORM: "Formation" };
+var COMPTA = { CP: "Congé", CGPP: "Congé", CPSUP: "Congé supp.", ANC: "Congé supp.", RHT: "Récup", REC: "Récup",
+    RC: "Récup", JF: "Férié", MAL: "Maladie", FOR: "Formation", FORM: "Formation" };
 
 /** Codes affichés pour information seulement (non comparés). */
 var COMPTA_INFO = { INDTR: "Pénalisation indemnité transport" };
 
 /** Type d'absence de l'appli → même catégorie que COMPTA. */
 function appCat(t) {
-  return CONGE_H[t] ? "Congé" : CONGE_J[t] ? "Congé supp." : t === "recup" ? "Récup" : t === "ferie" ? "Férié" : t === "maladie" ? "Maladie" : t === "formation" ? "Formation" : t === "greve" ? "Grève" : t === "absence" ? "Absence" : "";
+  return CONGE_H[t] ? "Congé" : CONGE_J[t] ? "Congé supp." : t === "recup" ? "Récup" : t === "ferie" ? "Férié"
+      : t === "maladie" ? "Maladie" : t === "formation" ? "Formation" : t === "greve" ? "Grève" : t === "absence" ? "Absence"
+      : "";
 }
 
 /**
@@ -88,7 +91,8 @@ function compareCompta(w, st, P) {
   }
   for (var i = 0; i < 7; i++) {
     var dc = c.days[i], pd = P.days[i] || { act: 0, abs: {}, ind: {} }, dn = DAYN[i] + " " + fmtD(dayDate(P.key, i));
-    if (dc.worked || pd.act) items.push({ l: dn + " · travail", a: hm(dc.worked), b: hm(pd.act), ok: eq(dc.worked, pd.act), an: dc.worked, bn: pd.act, s: 1 });
+    if (dc.worked || pd.act) items.push({ l: dn + " · travail", a: hm(dc.worked), b: hm(pd.act), ok: eq(dc.worked,
+        pd.act), an: dc.worked, bn: pd.act, s: 1 });
     var cn = 0;
     Object.keys(pd.ind).forEach(function(k) {
       if (k !== "I2") cn += pd.ind[k];
@@ -106,7 +110,8 @@ function compareCompta(w, st, P) {
       aB[cat] = (aB[cat] || 0) + pd.abs[k];
     });
     Object.keys(Object.assign({}, aA, aB)).forEach(function(cat) {
-      items.push({ l: dn + " · " + cat.toLowerCase(), a: aA[cat] ? hm(aA[cat]) : "—", b: aB[cat] ? hm(aB[cat]) : "—", ok: eq(aA[cat], aB[cat]), an: aA[cat] || 0, bn: aB[cat] || 0, s: cat === "Férié" ? 1 : -1 });
+      items.push({ l: dn + " · " + cat.toLowerCase(), a: aA[cat] ? hm(aA[cat]) : "—", b: aB[cat] ? hm(aB[cat])
+          : "—", ok: eq(aA[cat], aB[cat]), an: aA[cat] || 0, bn: aB[cat] || 0, s: cat === "Férié" ? 1 : -1 });
     });
   }
   // Heures sup : la compta les exprime de deux façons, on compare à celle qui est présente.
@@ -124,13 +129,20 @@ function compareCompta(w, st, P) {
   var paid = ev.R125 != null || ev.R150 != null ? Math.round((ev.R125 || 0) / 1.25 + (ev.R150 || 0) / 1.5) : null, part = c.recupH
       + c.congeH, pres = c.pres + c.samedi;
   if (paid != null) items.push({ l: "Heures sup payées", a: hm(hs), b: hm(paid), ok: eq(hs, paid, 2), an: hs, bn: paid, s: 1, w: 1 });
-  if (hasI2 && (paid == null || part)) items.push({ l: part ? "Présence au-delà de 35 h, récup comprise" : "Heures sup de la semaine", a: hm(part ? pres : hs), b: hm(i2), ok: eq(part ? pres : hs, i2, 1), an: part ? pres : hs, bn: i2, s: 1, w: 1 });
-  if (paid == null && !hasI2 && P.ec) items.push({ l: "Heures sup de la semaine", a: hm(hs), b: hm(P.ec.tot), ok: eq(hs, P.ec.tot, 2), an: hs, bn: P.ec.tot, s: 1, w: 1 });
-  items.push({ l: "Heures sup majorées 125 %", a: hm(Math.floor(c.hs1 * 1.25)), b: hm(ev.R125 || 0), ok: eq(c.hs1 * 1.25, ev.R125 || 0, 1), an: c.hs1 * 1.25, bn: ev.R125 || 0, s: 1, w: 1 });
-  if (c.hs2 || ev.R150) items.push({ l: "Heures sup majorées 150 %", a: hm(Math.floor(c.hs2 * 1.5)), b: hm(ev.R150 || 0), ok: eq(c.hs2 * 1.5, ev.R150 || 0, 1), an: c.hs2 * 1.5, bn: ev.R150 || 0, s: 1, w: 1 });
-  items.push({ l: "Primes de panier", a: String(c.panier), b: String(ev.PANIE || 0), ok: c.panier === (ev.PANIE || 0), an: c.panier, bn: ev.PANIE || 0, s: 1, w: 1 });
-  items.push({ l: "Primes d'équipe", a: String(c.panier), b: String(ev.PEQUI || 0), ok: c.panier === (ev.PEQUI || 0), an: c.panier, bn: ev.PEQUI || 0, s: 1, w: 1 });
-  items.push({ l: "Majoration de nuit", a: hm(c.majNuit), b: hm(ev.RMNUI || 0), ok: eq(c.majNuit, ev.RMNUI || 0), an: c.majNuit, bn: ev.RMNUI || 0, s: 1, w: 1 });
+  if (hasI2 && (paid == null || part)) items.push({ l: part ? "Présence au-delà de 35 h, récup comprise" : "Heures sup de la semaine",
+      a: hm(part ? pres : hs), b: hm(i2), ok: eq(part ? pres : hs, i2, 1), an: part ? pres : hs, bn: i2, s: 1, w: 1 });
+  if (paid == null && !hasI2 && P.ec) items.push({ l: "Heures sup de la semaine", a: hm(hs), b: hm(P.ec.tot),
+      ok: eq(hs, P.ec.tot, 2), an: hs, bn: P.ec.tot, s: 1, w: 1 });
+  items.push({ l: "Heures sup majorées 125 %", a: hm(Math.floor(c.hs1 * 1.25)), b: hm(ev.R125 || 0), ok: eq(c.hs1 * 1.25,
+      ev.R125 || 0, 1), an: c.hs1 * 1.25, bn: ev.R125 || 0, s: 1, w: 1 });
+  if (c.hs2 || ev.R150) items.push({ l: "Heures sup majorées 150 %", a: hm(Math.floor(c.hs2 * 1.5)), b: hm(ev.R150
+      || 0), ok: eq(c.hs2 * 1.5, ev.R150 || 0, 1), an: c.hs2 * 1.5, bn: ev.R150 || 0, s: 1, w: 1 });
+  items.push({ l: "Primes de panier", a: String(c.panier), b: String(ev.PANIE || 0), ok: c.panier === (ev.PANIE
+      || 0), an: c.panier, bn: ev.PANIE || 0, s: 1, w: 1 });
+  items.push({ l: "Primes d'équipe", a: String(c.panier), b: String(ev.PEQUI || 0), ok: c.panier === (ev.PEQUI
+      || 0), an: c.panier, bn: ev.PEQUI || 0, s: 1, w: 1 });
+  items.push({ l: "Majoration de nuit", a: hm(c.majNuit), b: hm(ev.RMNUI || 0), ok: eq(c.majNuit, ev.RMNUI
+      || 0), an: c.majNuit, bn: ev.RMNUI || 0, s: 1, w: 1 });
   items.forEach(function(x) {
     if (!x.ok) x.fav = (x.bn - x.an) * x.s > 0 ? 1 : -1;
   });
@@ -143,13 +155,16 @@ function compareCompta(w, st, P) {
     });
   });
   var now = /* @__PURE__ */ new Date();
-  return { at: fmtD(now) + "/" + now.getFullYear() + " à " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0"), bad: items.filter(function(x) {
+  return { at: fmtD(now) + "/" + now.getFullYear() + " à " + String(now.getHours()).padStart(2, "0") + ":"
+      + String(now.getMinutes()).padStart(2, "0"), bad: items.filter(function(x) {
     return !x.ok;
   }).length, items, info };
 }
 
 /** Libellé d'une ligne du récapitulatif des soldes → compteur de l'appli (null : ligne de total, ignorée). */
-var SOLDE_MAP = [[/^TOT/i, null], [/cours d.?acquisition/i, "cpacq"], [/5.{0,4}me semaine/i, "c5"], [/fractionn/i, "frac"], [/anciennet/i, "anc"], [/suppl/i, "csup"], [/^Cong.s pay.s acquis/i, "cp"], [/r.cup.rer/i, "recup"], [/\bCET\b|.pargne/i, "cet"]];
+var SOLDE_MAP = [[/^TOT/i, null], [/cours d.?acquisition/i, "cpacq"], [/5.{0,4}me semaine/i, "c5"], [/fractionn/i,
+    "frac"], [/anciennet/i, "anc"], [/suppl/i, "csup"], [/^Cong.s pay.s acquis/i, "cp"], [/r.cup.rer/i, "recup"],
+    [/\bCET\b|.pargne/i, "cet"]];
 
 /**
  * Lit le texte collé du « Récapitulatif des soldes ».
@@ -220,7 +235,8 @@ function compareSoldes(P) {
   });
   if (P.rows.cpacq) {
     var a = st.cpt && st.cpt.cpacq, b = P.rows.cpacq.acq || P.rows.cpacq.solde || 0;
-    items.push({ l: "CP en cours d'acquisition", a: a != null ? hm(a) : "—", b: hm(b), ok: a != null && Math.abs(a - b) <= 1, an: a || 0, bn: b, s: 1 });
+    items.push({ l: "CP en cours d'acquisition", a: a != null ? hm(a) : "—", b: hm(b), ok: a != null && Math.abs(a - b) <= 1,
+        an: a || 0, bn: b, s: 1 });
   }
   if (P.rows.cet) {
     var r = P.rows.cet, b2 = r.solde != null ? r.solde : (r.acq || 0) - (r.pris || 0);

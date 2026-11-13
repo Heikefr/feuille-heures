@@ -93,7 +93,8 @@ async function doExport(validate) {
     return;
   }
   var w = week(), st = S.settings, c = weekCalc(w, st), mon = monOfKey(S.cur), now = /* @__PURE__ */ new Date();
-  var sentAt = fmtD(now) + "/" + now.getFullYear() + " à " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+  var sentAt = fmtD(now) + "/" + now.getFullYear() + " à " + String(now.getHours()).padStart(2, "0") + ":"
+      + String(now.getMinutes()).padStart(2, "0");
   var soldeAvant = soldeCalc(st, S.weeks).solde - (w.validated ? 0 : 0);
   var buf = await buildXlsx(w, c, mon, st, validate ? sentAt : w.sentAt || sentAt, w.validated ? soldeAvant : soldeAvant + c.net);
   var name = "Feuille_heures_S" + String(+S.cur.slice(6)).padStart(2, "0") + "_" + S.cur.slice(0, 4) + (st.profil.nom ? "_"
@@ -122,12 +123,14 @@ async function doExport(validate) {
 async function buildXlsx(w, c, mon, st, sentAt, soldeApres) {
   var wb = new ExcelJS.Workbook();
   wb.creator = st.profil.nom || "Feuille d'heures";
-  var ws = wb.addWorksheet("S" + +S.cur.slice(6), { pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 1, paperSize: 9 } });
+  var ws = wb.addWorksheet("S" + +S.cur.slice(6), { pageSetup: { orientation: "landscape", fitToPage: true,
+      fitToWidth: 1, fitToHeight: 1, paperSize: 9 } });
   ws.columns = [{ width: 34 }].concat(DAYN.map(function() {
     return { width: 11 };
   })).concat([{ width: 12 }]);
   var T = "[h]:mm", thin = { style: "thin", color: { argb: "FF9AA7B4" } }, border = { top: thin, left: thin, bottom: thin, right: thin };
-  var HEAD = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2B38" } }, SUB = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE7EBEF" } }, HL = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFBEEDD" } };
+  var HEAD = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2B38" } }, SUB = { type: "pattern",
+      pattern: "solid", fgColor: { argb: "FFE7EBEF" } }, HL = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFBEEDD" } };
   ws.mergeCells("A1:I1");
   var t = ws.getCell("A1");
   t.value = "FICHE DE TRAVAIL & ABSENCES";
@@ -137,7 +140,8 @@ async function buildXlsx(w, c, mon, st, sentAt, soldeApres) {
   ws.getRow(1).height = 28;
   var sun = new Date(mon);
   sun.setDate(sun.getDate() + 6);
-  var info = [["Nom", st.profil.nom, "Matricule", st.profil.matricule], ["Poste", st.profil.poste, "Site", st.profil.site], ["Semaine", +S.cur.slice(6)
+  var info = [["Nom", st.profil.nom, "Matricule", st.profil.matricule], ["Poste", st.profil.poste, "Site",
+      st.profil.site], ["Semaine", +S.cur.slice(6)
       + " / " + S.cur.slice(0, 4), "Période", "du " + fmtD(mon) + "/" + mon.getFullYear() + " au " + fmtD(sun) + "/"
       + sun.getFullYear()]];
   info.forEach(function(r2, i2) {

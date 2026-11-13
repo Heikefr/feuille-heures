@@ -12,7 +12,9 @@ import { ICON } from "./outils.js";
 var MOIS = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
 /** Colonnes du bilan : [code, titre, "n" si c'est un nombre et non une durée]. */
-var BCOLS = [["w", "Travaillé"], ["hs", "Heures sup"], ["n", "Nuit"], ["sa", "Samedi"], ["pa", "Primes", "n"], ["gain", "Récup gagnée"], ["rp", "Récup posée"], ["co", "Congés"], ["fo", "Formation"], ["ma", "Maladie"], ["gr", "Grève"], ["fe", "Fériés"]];
+var BCOLS = [["w", "Travaillé"], ["hs", "Heures sup"], ["n", "Nuit"], ["sa", "Samedi"], ["pa", "Primes", "n"],
+    ["gain", "Récup gagnée"], ["rp", "Récup posée"], ["co", "Congés"], ["fo", "Formation"], ["ma", "Maladie"],
+    ["gr", "Grève"], ["fe", "Fériés"]];
 
 /**
  * Calcule le bilan d'une année.

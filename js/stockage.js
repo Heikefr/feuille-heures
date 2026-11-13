@@ -101,7 +101,8 @@ document.addEventListener("visibilitychange", function() {
 
 /** Photographie complète des données, au format des sauvegardes. */
 function snapshot() {
-  return { app: "feuille-heures", format: SCHEMA, version: VERSION, exporte: (/* @__PURE__ */ new Date()).toISOString().slice(0, 16), settings: S.settings, weeks: S.weeks };
+  return { app: "feuille-heures", format: SCHEMA, version: VERSION, exporte: (/* @__PURE__ */ new Date()).toISOString().slice(0,
+      16), settings: S.settings, weeks: S.weeks };
 }
 
 /**

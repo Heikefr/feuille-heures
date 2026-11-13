@@ -104,9 +104,11 @@ async function syncApi(action, payload) {
       u.searchParams.set("cle", SY.cle);
       u.searchParams.set("since", payload.since || 0);
       r = await fetch(u.toString(), ac ? { signal: ac.signal } : {});
-    } else r = await fetch(SY.api, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ action, cle: SY.cle }, payload)), signal: ac ? ac.signal : void 0 });
+    } else r = await fetch(SY.api, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(Object.assign({ action, cle: SY.cle }, payload)), signal: ac ? ac.signal : void 0 });
   } catch (e) {
-    throw new Error(navigator.onLine === false ? "Hors ligne" : e && e.name === "AbortError" ? "Pas de réponse (réseau lent)" : "Réseau indisponible");
+    throw new Error(navigator.onLine === false ? "Hors ligne" : e && e.name === "AbortError" ? "Pas de réponse (réseau lent)"
+        : "Réseau indisponible");
   } finally {
     clearTimeout(to);
   }

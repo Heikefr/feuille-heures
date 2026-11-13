@@ -10,7 +10,9 @@ import { backupDue, getSnaps, lastFileBackup } from "./sauvegardes.js";
 import { rescueKept } from "./secours.js";
 
 /** Pages des réglages : code → [titre, couleur de l'icône, icône]. */
-var SETP = { profil: ["Profil", "#5b8def", "u"], dest: ["Destinataires", "#2f9e6b", "m"], horaires: ["Horaires", "#d9822b", "c"], regles: ["Règles de calcul", "#8a6bd1", "r"], aff: ["Affichage", "#6b7280", "t"], sync: ["Synchronisation", "#2563eb", "y"], save: ["Sauvegardes", "#0e8f9c", "s"], news: ["Nouveautés", "#e0a21b", "n"] };
+var SETP = { profil: ["Profil", "#5b8def", "u"], dest: ["Destinataires", "#2f9e6b", "m"], horaires: ["Horaires",
+    "#d9822b", "c"], regles: ["Règles de calcul", "#8a6bd1", "r"], aff: ["Affichage", "#6b7280", "t"], sync: ["Synchronisation",
+    "#2563eb", "y"], save: ["Sauvegardes", "#0e8f9c", "s"], news: ["Nouveautés", "#e0a21b", "n"] };
 
 /** Icônes des pages de réglages. */
 var SICON = {
@@ -62,14 +64,16 @@ function viewSettings() {
     out += '<div class="card">';
     st.horaires.forEach(function(h, i) {
       out += '<div class="sched-edit"><div class="hd"><input type="text" aria-label="Nom" data-act="hset" data-i="'
-          + i + '" data-k="label" value="' + esc(h.label) + '" placeholder="' + esc(autoLabel(h.start, h.end)) + ' (automatique)"><select aria-label="Équipe" data-act="hset" data-i="'
+          + i + '" data-k="label" value="' + esc(h.label) + '" placeholder="' + esc(autoLabel(h.start, h.end))
+              + ' (automatique)"><select aria-label="Équipe" data-act="hset" data-i="'
           + i + '" data-k="team">' + ["Matin", "Soir", "Journée"].map(function(t) {
         return "<option" + (h.team === t ? " selected" : "") + ">" + t + "</option>";
       }).join("") + '</select><button class="btn small ghost" data-act="hdel" data-i="' + i + '" aria-label="Supprimer">✕</button></div><div class="row3">'
           + hin(i, "start", "Début", h.start) + hin(i, "end", "Fin", h.end) + hin(i, "pause", "Pause", h.pause) + hin(i, "theo", "Théorique", h.theo)
           + '</div><label class="tiny"><input type="checkbox" data-act="hfri" data-i="' + i + '"' + (h.fri ? " checked" : "")
           + "> Horaire différent le vendredi</label>" + (h.fri ? '<div class="row3">' + hin(i, "fri.start", "Ven. début", h.fri.start)
-          + hin(i, "fri.end", "Ven. fin", h.fri.end) + hin(i, "fri.pause", "Ven. pause", h.fri.pause) + hin(i, "fri.theo", "Ven. théorique", h.fri.theo)
+          + hin(i, "fri.end", "Ven. fin", h.fri.end) + hin(i, "fri.pause", "Ven. pause", h.fri.pause) + hin(i,
+              "fri.theo", "Ven. théorique", h.fri.theo)
           + "</div>" : "") + "</div>";
     });
     out += '</div><button class="btn" data-act="hadd">Ajouter un horaire</button>';
@@ -78,11 +82,13 @@ function viewSettings() {
     out += '<div class="igl">Heures sup</div><div class="card pad"><div class="row2">' + ft("regles.seuil", "Seuil de la semaine", R.seuil)
         + ft("regles.palier", "1er palier d'heures sup", R.palier) + f("regles.taux1", "Majoration 1er palier (%)", R.taux1, "number")
         + f("regles.taux2", "Majoration au-delà (%)", R.taux2, "number") + '</div><div class="field"><label for="s-hs">Heures sup</label><select id="s-hs" data-act="sset" data-p="regles.hsMode"><option value="recup"'
-        + (R.hsMode === "recup" ? " selected" : "") + '>À récupérer (compteur)</option><option value="payer"' + (R.hsMode === "payer" ? " selected" : "")
+        + (R.hsMode === "recup" ? " selected" : "") + '>À récupérer (compteur)</option><option value="payer"'
+            + (R.hsMode === "payer" ? " selected" : "")
         + '>À payer</option></select></div><div class="field"><label for="s-hsc">Calcul des heures sup</label><select id="s-hsc" data-act="sset" data-p="regles.hsCalc"><option value="jour"'
         + (R.hsCalc === "jour" ? " selected" : "") + `>Jour par jour, au-delà de l'horaire théorique (ancien fichier)</option><option value="semaine"`
         + (R.hsCalc !== "jour" ? " selected" : "") + ">À la semaine, au-delà de " + hm(R.seuil) + ' (accord ARTT)</option></select></div></div><div class="igl">Nuit, samedi et primes</div><div class="card pad"><div class="row2">'
-        + ft("regles.nuitDebut", "Nuit avant", R.nuitDebut) + ft("regles.nuitFin", "Nuit après", R.nuitFin) + f("regles.nuit", "Majoration de nuit (%)", R.nuit, "number")
+        + ft("regles.nuitDebut", "Nuit avant", R.nuitDebut) + ft("regles.nuitFin", "Nuit après", R.nuitFin)
+            + f("regles.nuit", "Majoration de nuit (%)", R.nuit, "number")
         + f("regles.samTaux", "Majoration du samedi (%)", R.samTaux, "number") + ft("regles.panierMin", "Primes dès", R.panierMin)
         + '</div></div><div class="igl">Alertes</div><div class="card pad"><div class="row2">' + ft("regles.maxJour", "Au-delà de (jour)", R.maxJour)
         + ft("regles.maxSem", "Au-delà de (semaine)", R.maxSem) + `</div></div><div class="igl">Journées d'absence (heures comptées)</div><div class="card pad"><div class="row2">`;
@@ -96,7 +102,8 @@ function viewSettings() {
   if (pg === "sync") {
     var ago = SY.lastOk ? Math.round((Date.now() - SY.lastOk) / 6e4) : null, nd = Object.keys(SY.dirty).length;
     out += '<div class="card pad">' + (SY.api ? '<div class="syncst"><i class="' + (SY.err ? "err" : "ok") + '"></i><b>'
-        + (SY.err ? "Erreur : " + esc(SY.err) : "Synchronisation active") + "</b></div>" + (SY.err ? '<div class="tiny">Tes modifications sont gardées sur cet appareil. Nouvel essai automatique, et dès le retour du réseau.</div>' : "")
+        + (SY.err ? "Erreur : " + esc(SY.err) : "Synchronisation active") + "</b></div>" + (SY.err ? '<div class="tiny">Tes modifications sont gardées sur cet appareil. Nouvel essai automatique, et dès le retour du réseau.</div>'
+            : "")
         + '<div class="tiny">Dernière synchronisation : ' + (ago == null ? "jamais" : ago < 1 ? "à l'instant" : "il y a "
         + ago + " min") + (nd ? " · " + nd + " modification(s) en attente" : "") + '</div><div class="btns"><button class="btn" data-act="syncnow">Synchroniser maintenant</button><button class="btn danger'
         + (S.confirm === "syncoff" ? " primary" : "") + '" data-act="syncoff">' + (S.confirm === "syncoff" ? "Confirmer ?" : "Désactiver")
@@ -124,7 +131,8 @@ function viewSettings() {
 /** Vrai si les règles de calcul sont celles des accords (aucune valeur modifiée). */
 function rulesDefault() {
   var d = defaultSettings(""), a = S.settings;
-  return JSON.stringify(d.regles) === JSON.stringify(Object.assign({}, d.regles, a.regles)) && JSON.stringify(d.comptes) === JSON.stringify(Object.assign({}, d.comptes, a.comptes));
+  return JSON.stringify(d.regles) === JSON.stringify(Object.assign({}, d.regles, a.regles)) && JSON.stringify(d.comptes) === JSON.stringify(Object.assign({},
+      d.comptes, a.comptes));
 }
 
 /** Champ d'heure d'un horaire type. */
