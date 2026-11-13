@@ -303,6 +303,22 @@ main.dbody{padding:16px 22px 30px}
 .dk .pcr .pinf label{font-size:0;gap:0}
 .dk .pcr .psel{font-size:13.5px}
 .dk .cgrid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+
+/* écran d'envoi */
+.sendov{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center}
+.sendbg{position:absolute;inset:0;background:rgba(15,20,27,.55)}
+.sendm{position:relative;background:var(--surface);border-radius:16px;width:min(1180px,94vw);max-height:92vh;display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto minmax(0,1fr);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.sendh{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line)}.sendh b{font-size:19px}
+.sendf{background:var(--bg);padding:16px;overflow:auto}.sendf img{box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.slab{font-size:11.5px;letter-spacing:.06em;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
+.sendr{padding:16px 18px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.swhos{display:grid;gap:5px}.swho{display:flex;gap:10px;align-items:center;background:var(--sunk);border-radius:8px;padding:7px 10px;font-size:14px;min-width:0}.swho small{color:var(--muted);width:22px;flex:none}.swho span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sobj{font-size:13.5px;color:var(--muted)}.sobj b{color:var(--fg)}
+.sgrow{flex:1;min-height:8px}
+.sgo{width:100%;padding:14px;font-size:16px}
+.ssteps{margin:0;padding-left:20px;display:grid;gap:4px;font-size:13.5px}
+.slinks{border-top:1px solid var(--line);padding-top:9px;font-size:12.5px;color:var(--muted)}
+@media (max-width:899px){.sendov{align-items:stretch}.sendm{width:100%;max-height:none;height:100%;border-radius:0;grid-template-columns:1fr;grid-template-rows:auto auto 1fr;overflow:auto}.sendf{padding:10px}.sendh{padding-top:max(12px,env(safe-area-inset-top))}.sendr{padding-bottom:max(18px,env(safe-area-inset-bottom))}}
 /* v1.4 */
 .wnote{display:flex;gap:8px;align-items:center;background:var(--paper);border:1px dashed var(--headline);border-radius:10px;padding:5px 10px}
 .wnote span{font-size:12px;font-weight:700;color:var(--note);text-transform:uppercase;letter-spacing:.05em}
@@ -527,7 +543,7 @@ if(typeof module!=="undefined")module.exports={counters:counters,feries:feries,f
 <script>
 /* ===== Application ===== */
 var VERSION="0.9";
-var CHANGELOG=[["0.9","13/11/2026",["Nouvelle disposition sur PC (grand écran) : menu à gauche avec mini-calendrier des semaines et rappels, semaine au centre, résumé et compteurs à droite","Bouton « Aperçu de la fiche » : la vraie fiche à droite, mise à jour pendant la saisie","Horaires types sur une seule ligne, aux couleurs des équipes","Raccourcis clavier sur PC : flèches pour changer de semaine, Ctrl+Entrée pour envoyer, Ctrl+P pour l'aperçu","Sur iPhone, rien ne change"]],["0.8","10/11/2026",["Compteur CET : solde, « 105:00 sur 140:00 max », placements faits dans Pléiade retirés tout de suite du compteur d'origine","Vérification des soldes : colle le récapitulatif des soldes de la compta, l'appli compare chaque compteur à la date du relevé et peut se recaler dessus","Heure de récup ou de congé posée dans une journée : compte dans la présence (I2) mais pas dans les heures sup majorées (R125), comme la compta","Vérification d'une semaine : « Heures sup payées » (R125/R150) et « Présence au-delà de 35 h » (I2) séparées"]],["0.7","06/11/2026",["Vérification avec la compta : colle la page du logiciel (une ou plusieurs semaines), l'appli compare jour par jour et prépare le message en cas d'écart","Coche ✓ (ou !) dans la vue année pour les semaines vérifiées","Codes reconnus : G000, I9, I2, CP, CGPP, CPSUP, RHT, REC, JF, PANIE, PEQUI, RMNUI, R125 ; INDTR affiché pour information","Heures à récupérer et congés posés dans une journée : comptés en entier, comme la compta","Bouton « Vérifier » à la place de « Sauver » (sauvegarde automatique à chaque envoi)"]],["0.6","06/11/2026",["Compteurs détaillés en heures et en jours : récup (remise à zéro au 1er janvier), congé principal, 5e semaine, fractionnement, ancienneté, congés supplémentaires","En posant un congé, choix du compteur ; congés et récup retirés dès que la date est passée (prévus s'ils sont à venir)","Message de fractionnement pour 5 jours de congé principal entre novembre et mai","Rappels discrets : formulaire CET (avril, novembre) et récup à poser avant le 31/12","Import de l'historique de l'ancien fichier Excel","Fiche : case des heures de la semaine retirée ; semaine vide sans statut ; « Vider » efface aussi la note"]],["0.5","05/11/2026",["Correctif : heures sup affichées jour par jour sur la fiche, case des heures à récupérer de la semaine, récup posée décomptée seulement si elle complète la journée, Matin 3 en 5h30 – 12h30 (accord), bouton Copier retiré","Synchronisation iPhone ↔ PC par ton Google Sheet, protégée par un code d'accès","Fiche envoyée en image, à l'identique de la fiche papier, avec observations automatiques","Absences : « Heures à récupérer » et « Congé payé », heures partielles dans la journée et durée modifiable","Note par semaine, bouton « Poser la semaine en congé payé » et appui long dans la vue année","Prochaines échéances dans Compteur, avec ajout au Calendrier de l'iPhone","Vue année : congés en bleu, notes et formations en violet, centrée sur PC","Cases d'heure plus larges sur PC, Matin 3 jusqu'à 12:00 le vendredi","Choix du calcul des heures sup : jour par jour ou à la semaine"]],["0.4","05/11/2026",["Nouvel écran Semaine sur fond de fiche papier : horaire, arrivée et fin modifiables directement","Grande grille complète sur PC, comme la fenêtre de saisie de l'ancien fichier","Vue année pour aller à n'importe quelle semaine, avec l'état de chaque semaine","Glisser le doigt à gauche ou à droite pour changer de semaine","Réglages rangés comme sur iPhone, avec bouton pour rétablir les valeurs des accords","Corrections du compteur et des congés repliées"]],["0.3","05/11/2026",["Thème automatique, clair ou sombre dans Réglages","Jours fériés préremplis (les fériés du week-end sont affichés pour information)","Fiche au format de l'ancien fichier, copiée dans le corps du mail et ouverture d'Outlook avec destinataires et objet","Heures sup affichées jour par jour sur la fiche (total calculé sur la semaine) et horaire théorique par horaire","Gestionnaire de sauvegardes : liste, restauration, export, sauvegarde automatique","Boutons de remplissage raccourcis (Matin 1, Soir 2…)"]],["0.2","04/11/2026",["Samedi selon l'accord maintenance : heures hors seuil de 35 h, toutes à récupérer avec 50 % de majoration","Samedi : primes panier, équipe et indemnité 3006 ajoutées dès 6 h de travail","Alertes au-delà de 10 h par jour et 40 h par semaine","Compteur de congés payés (heures et jours maison) avec correction du solde","Nouveau type de journée : Jour maison"]],["0.1","04/11/2026",["Première version autonome : saisie de la semaine, heures sup, heures de nuit, primes panier et équipe","Compteur de récupération avec correction du solde","Fiche Excel envoyée par le menu de partage (Mail)","Sauvegarde et import des données, fonctionne hors connexion"]]];
+var CHANGELOG=[["0.9","13/11/2026",["Envoi simplifié : un écran avec la fiche, les destinataires et un seul bouton « Copier la fiche et ouvrir Outlook ». La semaine n'est verrouillée qu'à ce moment-là","Nouvelle disposition sur PC (grand écran) : menu à gauche avec mini-calendrier des semaines et rappels, semaine au centre, résumé et compteurs à droite","Bouton « Aperçu de la fiche » : la vraie fiche à droite, mise à jour pendant la saisie","Horaires types sur une seule ligne, aux couleurs des équipes","Raccourcis clavier sur PC : flèches pour changer de semaine, Ctrl+Entrée pour envoyer, Ctrl+P pour l'aperçu","Sur iPhone, rien ne change"]],["0.8","10/11/2026",["Compteur CET : solde, « 105:00 sur 140:00 max », placements faits dans Pléiade retirés tout de suite du compteur d'origine","Vérification des soldes : colle le récapitulatif des soldes de la compta, l'appli compare chaque compteur à la date du relevé et peut se recaler dessus","Heure de récup ou de congé posée dans une journée : compte dans la présence (I2) mais pas dans les heures sup majorées (R125), comme la compta","Vérification d'une semaine : « Heures sup payées » (R125/R150) et « Présence au-delà de 35 h » (I2) séparées"]],["0.7","06/11/2026",["Vérification avec la compta : colle la page du logiciel (une ou plusieurs semaines), l'appli compare jour par jour et prépare le message en cas d'écart","Coche ✓ (ou !) dans la vue année pour les semaines vérifiées","Codes reconnus : G000, I9, I2, CP, CGPP, CPSUP, RHT, REC, JF, PANIE, PEQUI, RMNUI, R125 ; INDTR affiché pour information","Heures à récupérer et congés posés dans une journée : comptés en entier, comme la compta","Bouton « Vérifier » à la place de « Sauver » (sauvegarde automatique à chaque envoi)"]],["0.6","06/11/2026",["Compteurs détaillés en heures et en jours : récup (remise à zéro au 1er janvier), congé principal, 5e semaine, fractionnement, ancienneté, congés supplémentaires","En posant un congé, choix du compteur ; congés et récup retirés dès que la date est passée (prévus s'ils sont à venir)","Message de fractionnement pour 5 jours de congé principal entre novembre et mai","Rappels discrets : formulaire CET (avril, novembre) et récup à poser avant le 31/12","Import de l'historique de l'ancien fichier Excel","Fiche : case des heures de la semaine retirée ; semaine vide sans statut ; « Vider » efface aussi la note"]],["0.5","05/11/2026",["Correctif : heures sup affichées jour par jour sur la fiche, case des heures à récupérer de la semaine, récup posée décomptée seulement si elle complète la journée, Matin 3 en 5h30 – 12h30 (accord), bouton Copier retiré","Synchronisation iPhone ↔ PC par ton Google Sheet, protégée par un code d'accès","Fiche envoyée en image, à l'identique de la fiche papier, avec observations automatiques","Absences : « Heures à récupérer » et « Congé payé », heures partielles dans la journée et durée modifiable","Note par semaine, bouton « Poser la semaine en congé payé » et appui long dans la vue année","Prochaines échéances dans Compteur, avec ajout au Calendrier de l'iPhone","Vue année : congés en bleu, notes et formations en violet, centrée sur PC","Cases d'heure plus larges sur PC, Matin 3 jusqu'à 12:00 le vendredi","Choix du calcul des heures sup : jour par jour ou à la semaine"]],["0.4","05/11/2026",["Nouvel écran Semaine sur fond de fiche papier : horaire, arrivée et fin modifiables directement","Grande grille complète sur PC, comme la fenêtre de saisie de l'ancien fichier","Vue année pour aller à n'importe quelle semaine, avec l'état de chaque semaine","Glisser le doigt à gauche ou à droite pour changer de semaine","Réglages rangés comme sur iPhone, avec bouton pour rétablir les valeurs des accords","Corrections du compteur et des congés repliées"]],["0.3","05/11/2026",["Thème automatique, clair ou sombre dans Réglages","Jours fériés préremplis (les fériés du week-end sont affichés pour information)","Fiche au format de l'ancien fichier, copiée dans le corps du mail et ouverture d'Outlook avec destinataires et objet","Heures sup affichées jour par jour sur la fiche (total calculé sur la semaine) et horaire théorique par horaire","Gestionnaire de sauvegardes : liste, restauration, export, sauvegarde automatique","Boutons de remplissage raccourcis (Matin 1, Soir 2…)"]],["0.2","04/11/2026",["Samedi selon l'accord maintenance : heures hors seuil de 35 h, toutes à récupérer avec 50 % de majoration","Samedi : primes panier, équipe et indemnité 3006 ajoutées dès 6 h de travail","Alertes au-delà de 10 h par jour et 40 h par semaine","Compteur de congés payés (heures et jours maison) avec correction du solde","Nouveau type de journée : Jour maison"]],["0.1","04/11/2026",["Première version autonome : saisie de la semaine, heures sup, heures de nuit, primes panier et équipe","Compteur de récupération avec correction du solde","Fiche Excel envoyée par le menu de partage (Mail)","Sauvegarde et import des données, fonctionne hors connexion"]]];
 var TODAY=new Date();
 var DMQ=window.matchMedia?window.matchMedia("(min-width:1280px)"):{matches:false};
 var S={desk:DMQ.matches,settings:defaultSettings(keyOf(mondayOf(TODAY))),weeks:{},cur:keyOf(mondayOf(TODAY)),tab:"week",sheet:null,db:null,ready:false,offline:false,lastExport:null,toast:null};
@@ -597,19 +613,19 @@ function render(){S.defer=false;
     '<button class="iconbtn" data-act="wk" data-n="1" aria-label="Semaine suivante">'+ICON.next+'</button></div></div></header>';
   var fe=document.activeElement,fs=fe&&fe.dataset&&fe.dataset.act?'[data-act="'+fe.dataset.act+'"]'+(fe.dataset.i!=null?'[data-i="'+fe.dataset.i+'"]':'')+(fe.dataset.k?'[data-k="'+fe.dataset.k+'"]':''):null;
   var body=S.tab==="week"?viewWeek():S.tab==="bank"?viewBank():viewSettings();
-  if(S.desk){var y0=window.scrollY;app.innerHTML=deskShell(body,mon,sun,status)+(S.sheet!=null?viewSheet():"")+(S.year!=null?viewYear():"");window.scrollTo(0,y0);refocus(fs);return}
+  if(S.desk){var y0=window.scrollY;app.innerHTML=deskShell(body,mon,sun,status)+(S.sheet!=null?viewSheet():"")+(S.year!=null?viewYear():"")+(S.send?viewSend():"");window.scrollTo(0,y0);refocus(fs);return}
   var tabs='<nav class="tabs"><div class="wrap">'+
     tab("week","Semaine",ICON.week)+tab("bank","Compteur",ICON.bank)+tab("set","Réglages",ICON.gear)+'</div></nav>';
   var y=window.scrollY;
-  app.innerHTML=head+'<main><div class="wrap">'+body+'</div></main>'+tabs+(S.sheet!=null?viewSheet():"")+(S.year!=null?viewYear():"");
+  app.innerHTML=head+'<main><div class="wrap">'+body+'</div></main>'+tabs+(S.sheet!=null?viewSheet():"")+(S.year!=null?viewYear():"")+(S.send?viewSend():"");
   window.scrollTo(0,y);refocus(fs);
 }
 function refocus(fs){if(!fs)return;try{var e=[].filter.call(app.querySelectorAll(fs),function(x){return x.offsetParent!==null})[0];if(e&&e.tagName!=="BUTTON")e.focus({preventScroll:true})}catch(x){}}
 function deskShell(body,mon,sun,status){var st=S.settings,cur=S.cur,vf=S.tab==="week"&&S.verif;
   var it=function(act,t,l,on,ex){return'<button class="dit'+(on?' on':'')+'" data-act="'+act+'"'+(t?' data-t="'+t+'"':'')+'><span>'+l+'</span>'+(ex||'')+'</button>'};
   var h='<div class="dk"><aside class="dside"><div class="dbrand">Feuille d\'heures</div><nav class="dnav">'+
-    it("tab","week","Semaine",S.tab==="week"&&!vf,'<span class="dcnt">S'+(+cur.slice(6))+'</span>')+it("year","","Année",S.year!=null)+it("tab","bank","Compteurs",S.tab==="bank")+
-    it("sverif","","Vérifier compta",vf)+it("tab","set","Réglages",S.tab==="set",!st.profil.nom?'<i class="ddot"></i>':'')+'</nav>';
+    it("tab","week","Semaine",S.tab==="week"&&!vf,'<span class="dcnt">S'+(+cur.slice(6))+'</span>')+it("tab","bank","Compteurs",S.tab==="bank")+
+    it("tab","set","Réglages",S.tab==="set",!st.profil.nom?'<i class="ddot"></i>':'')+'</nav>';
   var k0=shiftKey(cur,-2),tk=keyOf(mondayOf(TODAY)),m0=monOfKey(k0),m1=monOfKey(shiftKey(k0,9)),MO=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   h+='<div class="dsec">'+MO[m0.getMonth()]+(m1.getMonth()!==m0.getMonth()?' – '+MO[m1.getMonth()]:'')+' '+m1.getFullYear()+'</div><div class="dcal">';
   for(var i=0;i<10;i++){var k=shiftKey(k0,i),ws=weekStatus(k);h+='<button class="dwk '+ws+(k===cur?' cur':'')+(k===tk?' today':'')+'" data-act="ygo" data-k="'+k+'" title="Semaine '+(+k.slice(6))+'">'+(+k.slice(6))+'</button>'}
@@ -633,8 +649,8 @@ function deskRecap(w,c,st){var hsT=c.hs+c.samedi,abs=c.counted-c.worked,cn=S._cp
     '<div class="dsep"></div>'+kv("Récup gagnée",'+'+hm(c.gain),"okc")+(c.debit?kv("Récup posée",'−'+hm(c.debit)):'')+kv(w.validated?"Compteur de récup":"Récup après envoi",hm(after))+'</div>';
   h+='<div class="card pad dcard"><h4>Mes compteurs <button class="linkbtn" data-act="tab" data-t="bank">Tout voir</button></h4>'+kv("Récup",hm(cn.recup.reste))+kv("Congé principal",f(cn.cp))+kv("5e semaine",f(cn.c5))+(cn.frac.acq?kv("Fractionnement",f(cn.frac)):'')+kv("Ancienneté · supp.",f(cn.anc)+" · "+f(cn.csup))+kv("CET",hm(cn.cet.solde)+" / "+(CET_MAX/60))+'</div>';
   return h}
-function deskSend(w){return'<div class="card pad dcard dsend"><button class="btn primary" data-act="'+(w.validated?'copyhtml':'sendhtml')+'">'+(w.validated?'Recopier la fiche':'Envoyer au service paye')+'</button>'+
-  '<div class="tiny" style="text-align:center">'+(w.validated?'Semaine déjà envoyée':'Copie la fiche puis ouvre Outlook')+' · <kbd>Ctrl</kbd>+<kbd>Entrée</kbd></div>'+
+function deskSend(w){return'<div class="card pad dcard dsend"><button class="btn primary" data-act="sendopen">'+(w.validated?'Renvoyer la fiche':'Envoyer au service paye')+'</button>'+
+  '<div class="tiny" style="text-align:center">'+(w.validated?'Semaine déjà envoyée':'Aperçu, destinataires puis Outlook')+' · <kbd>Ctrl</kbd>+<kbd>Entrée</kbd></div>'+
   '<div class="dsub"><button class="btn small" data-act="obsbtn" aria-pressed="'+!!(S.showObs||w.obs)+'">Observ.</button><button class="btn small" data-act="verif" aria-pressed="'+!!S.verif+'">Vérifier</button><button class="btn small" data-act="export">Excel</button></div></div>'}
 function tab(id,l,ic){return'<button data-act="tab" data-t="'+id+'"'+(S.tab===id?' aria-current="page"':'')+'>'+ic+l+'</button>'}
 
@@ -695,7 +711,6 @@ function viewWeek(){
     if(S.verif)out+=viewVerif();
     else if(w.check)out+='<button class="remind'+(w.check.bad?' on':'')+'" data-act="verif" style="text-align:left;border:0">'+'<b>'+(w.check.bad?'⚠ '+w.check.bad+' écart(s) avec la compta':'✓ Vérifiée avec la compta')+'</b><span>le '+esc(w.check.at)+' · cliquer pour revoir</span></button>';
     if(S.showObs||w.obs)out+='<div class="field"><label for="obs">Observation (apparaît sur la fiche)</label><textarea id="obs" data-act="obs"'+lock+'>'+esc(w.obs||"")+'</textarea></div>';
-    if(S.lastExport===S.cur||w.validated)out+=mailPanel();
     out+='</section>';
     var right=P?'<div class="dfiche"><div class="dlab">L\'image exacte qui partira dans le mail</div><img class="fiche-img" alt="Fiche de la semaine" src="'+ficheCanvas(w,c,st).toDataURL("image/png")+'"></div>':deskRecap(w,c,st);
     if(!P){var cut=right.indexOf('<div class="card pad dcard"><h4>Mes compteurs');right=right.slice(0,cut)+deskSend(w)+right.slice(cut)}else right+=deskSend(w);
@@ -704,7 +719,7 @@ function viewWeek(){
   out+='<div class="wkbottom"><div style="display:grid;gap:10px"><div class="tiles"><div><span>Heures sup</span><b>'+hm(hsT)+'</b></div><div><span>Maj. HS + nuit</span><b>'+hm(c.majHs+c.majSam+c.majNuit)+'</b></div><div class="'+(c.net<0?'n':'g')+'"><span>Compteur</span><b>'+hm(c.net,true)+'</b></div></div>'+
     '<div class="tiny">Compteur de récup '+(w.validated?'':'après envoi')+' : <b class="mono">'+hm(after)+'</b>'+(c.hs2?' · dont '+hm(c.hs2)+' d\'HS à '+st.regles.taux2+' %':'')+'</div></div>';
   out+='<div style="display:grid;gap:10px"><div class="acts">'+
-    '<button class="act p" data-act="'+(w.validated?'copyhtml':'sendhtml')+'">'+ICON.mail+(w.validated?'Recopier':'Envoyer')+'</button>'+
+    '<button class="act p" data-act="sendopen">'+ICON.mail+(w.validated?'Renvoyer':'Envoyer')+'</button>'+
     '<button class="act" data-act="preview" aria-pressed="'+!!S.preview+'">'+ICON.eye+'Aperçu</button>'+
     '<button class="act" data-act="obsbtn" aria-pressed="'+!!(S.showObs||w.obs)+'">'+ICON.pen+'Observ.</button>'+
     '<button class="act" data-act="verif" aria-pressed="'+!!S.verif+'">'+ICON.check+'Vérifier</button></div></div></div>';
@@ -712,7 +727,6 @@ function viewWeek(){
   else if(w.check)out+='<button class="remind'+(w.check.bad?' on':'')+'" data-act="verif" style="text-align:left;border:0">'+'<b>'+(w.check.bad?'⚠ '+w.check.bad+' écart(s) avec la compta':'✓ Vérifiée avec la compta')+'</b><span>le '+esc(w.check.at)+' · toucher pour revoir</span></button>';
   if(S.showObs||w.obs)out+='<div class="field"><label for="obs">Observation (apparaît sur la fiche)</label><textarea id="obs" data-act="obs"'+lock+'>'+esc(w.obs||"")+'</textarea></div>';
   if(S.preview)out+='<img class="fiche-img" alt="Aperçu de la fiche" src="'+ficheCanvas(w,c,st).toDataURL("image/png")+'">';
-  if(S.lastExport===S.cur||w.validated)out+=mailPanel();
   out+='</section>';return out}
 
 /* ----- Vue année ----- */
@@ -755,6 +769,30 @@ function mailPanel(){var st=S.settings,to=mailList(st.mails.paye),cc=st.mails.cc
   '<div class="btns"><a class="btn small" style="text-align:center;text-decoration:none" href="'+esc(mt)+'">Ouvrir Mail</a><button class="btn small" data-act="copyhtml">Recopier la fiche</button><button class="btn small" data-act="shareimg">Partager l\'image</button><button class="btn small" data-act="export">Fichier Excel</button></div>'+
   '<details><summary>Image de la fiche (appui long pour la copier)</summary><div class="pad"><img class="fiche-img" alt="Fiche de la semaine" src="'+ficheCanvas(w,c,st).toDataURL("image/png")+'"></div></details>'+
   '<details><summary>Adresses et objet à copier</summary><div class="pad">'+copyLine("À",to.join("; "))+(cc.length?copyLine("Cc",cc.join("; ")):"")+copyLine("Objet",subj)+'</div></details></div>'}
+function sendUrls(){var st=S.settings,to=mailList(st.mails.paye),cc=st.mails.ccResp?mailList(st.mails.resp):[],subj=subject();
+  return{to:to,cc:cc,subj:subj,ol:"ms-outlook://compose?to="+to.map(encodeURIComponent).join(";")+(cc.length?"&cc="+cc.map(encodeURIComponent).join(";"):"")+"&subject="+encodeURIComponent(subj),
+    mt:"mailto:"+to.join(";")+"?subject="+encodeURIComponent(subj)+(cc.length?"&cc="+cc.join(";"):"")}}
+function viewSend(){var w=week(),st=S.settings,c=weekCalc(w,st),u=sendUrls(),n=+S.cur.slice(6),D=S.desk;
+  var who=u.to.map(function(x){return'<div class="swho"><small>À</small><span>'+esc(x)+'</span></div>'}).join("")+u.cc.map(function(x){return'<div class="swho"><small>Cc</small><span>'+esc(x)+'</span></div>'}).join("");
+  if(!u.to.length)who='<div class="banner warn">Aucune adresse du service paye. <button class="btn small" data-act="dgo" data-t="set" data-p="dest">Les saisir</button></div>';
+  var steps=D?['La fiche est copiée'+(w.validated?'.':' et la semaine passe en « envoyée ».'),'Outlook s\'ouvre avec les destinataires et l\'objet.','Clique dans le message et colle avec <b>Ctrl+V</b>.']:['La fiche est copiée'+(w.validated?'.':', la semaine passe en « envoyée ».'),'Outlook s\'ouvre, destinataires et objet remplis.','Dans le message : appui long puis <b>Coller</b>.'];
+  return'<div class="sendov" role="dialog" aria-modal="true" aria-label="Envoyer la fiche"><div class="sendbg" data-act="sendclose"></div><div class="sendm">'+
+    '<div class="sendh"><b>'+(w.validated?'Renvoyer la fiche S'+n:'Envoyer la semaine '+n+' au service paye')+'</b><button class="btn small" data-act="sendclose">✕ Fermer</button></div>'+
+    '<div class="sendf"><div class="slab">Ce qui partira dans le mail</div><img class="fiche-img" alt="Fiche de la semaine '+n+'" src="'+ficheCanvas(w,c,st).toDataURL("image/png")+'"></div>'+
+    '<div class="sendr"><div class="slab">Destinataires</div><div class="swhos">'+who+'</div><div class="sobj">Objet : <b>'+esc(u.subj)+'</b></div>'+
+    (w.validated?'<div class="tiny">Envoyée le '+esc(w.sentAt||'')+'. La renvoyer ne change rien dans l\'appli.</div>':'')+
+    '<div class="sgrow"></div><button class="btn primary sgo" data-act="sendgo" data-m="ol"'+(u.to.length?'':' disabled')+'>Copier la fiche et ouvrir Outlook</button>'+
+    (S.sendFail?'<div class="banner warn" style="display:block">La copie automatique n\'a pas marché. '+(D?'Fais un clic droit sur la fiche puis « Copier l\'image »':'Fais un appui long sur la fiche puis « Copier »')+', puis <button class="linkbtn" data-act="sendgo" data-m="nocopy">ouvre Outlook quand même</button>.</div>':'')+
+    '<ol class="ssteps">'+steps.map(function(x){return'<li>'+x+'</li>'}).join("")+'</ol>'+
+    '<div class="slinks">Pas Outlook ? <button class="linkbtn" data-act="sendgo" data-m="mail">Autre messagerie</button> · <button class="linkbtn" data-act="export">Fichier Excel</button></div></div></div></div>'}
+function sendGo(mode){var w=week(),st=S.settings,c=weekCalc(w,st),u=sendUrls();
+  var fin=function(ok){if(!ok&&mode!=="nocopy"){S.sendFail=true;render();toast("Copie impossible : copie l'image à la main");return}
+    if(!w.validated){var now=new Date();w.validated=true;w.sentAt=fmtD(now)+"/"+now.getFullYear()+" à "+String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");saveWeek();addSnap("Fiche S"+(+S.cur.slice(6))+" validée",true)}
+    S.send=false;S.sendFail=false;S.lastExport=S.cur;render();toast(ok?"Fiche copiée : colle-la dans le message":"Semaine marquée envoyée");
+    location.href=mode==="mail"?u.mt:u.ol};
+  if(mode==="nocopy"){fin(false);return}
+  try{if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({"image/png":ficheBlob(w,c,st)})]).then(function(){fin(true)},function(){fin(false)});return}}catch(e){}
+  fin(false)}
 function soldeApres(w,c){var s=soldeCalc(S.settings,S.weeks).solde;return w.validated?s:s+c.net}
 function copyLine(l,v){return'<div class="field"><span class="lbl">'+l+'</span><div class="copyline"><code>'+esc(v||"(à renseigner dans Réglages)")+'</code><button class="btn small" data-act="copy" data-v="'+esc(v||"")+'">Copier</button></div></div>'}
 function subject(){var p=S.settings.profil;return"Feuille d'heures S"+(+S.cur.slice(6))+" "+S.cur.slice(0,4)+(p.nom?" – "+p.nom:"")+(p.matricule?" ("+p.matricule+")":"")}
@@ -957,6 +995,9 @@ app.addEventListener("click",function(e){var el=e.target.closest("[data-act]");i
   else if(a==="cetfix"||a==="cetsave"){if(saveCet(a==="cetfix"?"fix":"add")){S.fix=null;render()}}
   else if(a==="cetdel"){var ce=(S.settings.cpt||{}).cet;if(ce){ce.moves=(ce.moves||[]).filter(function(m){return m.id!==el.dataset.id});saveSettings();render();toast("Placement supprimé")}}
   else if(a==="srecal"){recalSoldes()}
+  else if(a==="sendopen"){S.send=true;S.sendFail=false;render()}
+  else if(a==="sendclose"){S.send=false;S.sendFail=false;render()}
+  else if(a==="sendgo"){sendGo(el.dataset.m)}
   else if(a==="dmode"){S.dprev=el.dataset.m==="1";render()}
   else if(a==="dkeys"){S.dkeys=!S.dkeys;render()}
   else if(a==="dgo"){S.tab=el.dataset.t;S.verif=false;S.setPage=el.dataset.p||null;S.year=null;render();window.scrollTo(0,0)}
@@ -1330,7 +1371,7 @@ function viewVerif(){var out='<div class="card pad vbox"><b style="font-size:17p
   return out}
 
 /* ----- Navigation ----- */
-function goWeek(n){S.cur=shiftKey(S.cur,n);S.sheet=null;S.preview=false;S.showObs=false;S.vres=null;render()}
+function goWeek(n){S.send=false;S.cur=shiftKey(S.cur,n);S.sheet=null;S.preview=false;S.showObs=false;S.vres=null;render()}
 (function(){var x0=null,y0=0,t0=0;
   document.addEventListener("touchstart",function(e){if(S.tab!=="week"||S.sheet!=null||S.year!=null||e.touches.length!==1){x0=null;return}
     if(e.target.closest("input,select,textarea,.quick,.fiche-wrap,.paper.pcg")){x0=null;return}x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now()},{passive:true});
@@ -1425,8 +1466,8 @@ boot();
 (function(){var f=function(){var d=DMQ.matches;if(d!==S.desk){S.desk=d;if(S.ready)render()}};if(DMQ.addEventListener)DMQ.addEventListener("change",f);else if(DMQ.addListener)DMQ.addListener(f)})();
 app.addEventListener("focusout",function(e){if(S.defer&&e.target&&e.target.type==="time")setTimeout(function(){if(S.defer)render()},0)});
 document.addEventListener("keydown",function(e){if(!S.desk||!S.ready)return;var t=e.target,inF=t&&/^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName);
-  if(e.key==="Escape"){if(S.dkeys){S.dkeys=false;render()}return}
-  if((e.ctrlKey||e.metaKey)&&e.key==="Enter"&&S.tab==="week"){var b=app.querySelector('.dsend [data-act=sendhtml],.dsend [data-act=copyhtml]');if(b){e.preventDefault();if(t&&t.blur)t.blur();setTimeout(function(){b=app.querySelector('.dsend [data-act=sendhtml],.dsend [data-act=copyhtml]');if(b)b.click()},30)}return}
+  if(e.key==="Escape"){if(S.send){S.send=false;render()}else if(S.dkeys){S.dkeys=false;render()}return}
+  if((e.ctrlKey||e.metaKey)&&e.key==="Enter"&&S.tab==="week"){var q=S.send?'.sendm .sgo':'.dsend [data-act=sendopen]',b=app.querySelector(q);if(b){e.preventDefault();if(t&&t.blur)t.blur();setTimeout(function(){b=app.querySelector(q);if(b)b.click()},30)}return}
   if((e.ctrlKey||e.metaKey)&&(e.key==="p"||e.key==="P")&&S.tab==="week"&&!S.verif){e.preventDefault();S.dprev=!S.dprev;render();return}
   if(!inF&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&S.tab==="week"&&S.sheet==null&&S.year==null){e.preventDefault();goWeek(e.key==="ArrowLeft"?-1:1)}});
 </script>
