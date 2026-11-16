@@ -26,6 +26,7 @@ const { jeux } = require("./outils/donnees.js");
  * Vide tant que la refonte est « à l'identique ».
  */
 const CHANGEMENTS_VOULUS = {
+  "ecran-d-envoi": "1.0.1 : sur PC, le lien de secours sous le bouton d'envoi est « Essayer le lien direct Outlook » (iPhone inchangé).",
   "reglages-news": "La page Nouveautés a une entrée de plus (version 1.0), et « bêta » n'est plus écrit que pour les versions 0.x.",
 };
 

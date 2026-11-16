@@ -16,19 +16,21 @@
 import { defaultSettings, keyOf, mondayOf } from "./calculs.js";
 
 /** Numéro de version affiché à l'utilisateur (Réglages › Nouveautés, menu PC). */
-var VERSION = "1.0";
+var VERSION = "1.0.1";
 
 /**
  * Numéro de publication. Doit être identique à BUILD dans sw.js (vérifié par les tests) :
  * c'est son changement qui déclenche le bandeau « Nouvelle version prête ».
  */
-var BUILD = "1.0";
+var BUILD = "1.0.1";
 
 /**
  * Journal des nouveautés, de la plus récente à la plus ancienne : [version, date, [lignes]].
  * Affiché dans Réglages › Nouveautés.
  */
-var CHANGELOG = [["1.0", "13/11/2026", [
+var CHANGELOG = [["1.0.1", "16/11/2026", [
+    "Sur PC, « Copier la fiche et ouvrir Outlook » ouvre maintenant un nouveau message dans la messagerie par défaut de Windows (Outlook), avec les destinataires et l'objet. Sur iPhone, rien ne change"]],
+    ["1.0", "13/11/2026", [
     "L'appli sort de la bêta. Les calculs sont identiques à la minute près, la fiche envoyée est identique, et toutes tes données sont reprises telles quelles",
     "Données mieux protégées : si elles deviennent illisibles, l'appli s'arrête sur un écran de secours (restaurer une sauvegarde, récupérer depuis le Google Sheet, exporter) au lieu de les écraser",
     "Hors ligne plus fiable : une nouvelle version s'installe d'un bloc et s'annonce par le bandeau « Nouvelle version prête »",

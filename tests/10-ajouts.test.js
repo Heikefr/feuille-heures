@@ -86,3 +86,23 @@ test("taille de la fiche : propre à l'appareil, et une valeur inconnue ne casse
   assert.deepStrictEqual(page.erreursFH, []);
   await page.context().close();
 });
+
+test("envoi : sur PC le bouton ouvre la messagerie par défaut (mailto), sur iPhone l'appli Outlook (ms-outlook)", async () => {
+  // PC : lien standard, que Windows confie à Outlook ; le lien propre à l'appli Outlook reste proposé en secours.
+  const pc = await banc.ouvrirApp({ donnees: jeu.donnees, ecran: "pc" });
+  await clic(pc, '[data-act="sendopen"]');
+  const lienPc = await pc.locator(".sgo").getAttribute("href");
+  assert.match(lienPc, /^mailto:paye1@example\.com;paye2@example\.com\?subject=Feuille%20d'heures%20S46%202026/);
+  assert.match(lienPc, /&cc=responsable@example\.com$/);
+  assert.match(await pc.locator('.slinks a').getAttribute("href"), /^ms-outlook:\/\/compose\?to=/);
+  assert.match(await pc.locator(".slinks").innerText(), /Le message ne s'ouvre pas \? Essayer le lien direct Outlook/);
+  await pc.context().close();
+  // iPhone : comme en 0.10.
+  const tel = await banc.ouvrirApp({ donnees: jeu.donnees, ecran: "iphone" });
+  await clic(tel, '[data-act="sendopen"]');
+  const lienTel = await tel.locator(".sgo").getAttribute("href");
+  assert.match(lienTel, /^ms-outlook:\/\/compose\?to=paye1%40example\.com;paye2%40example\.com&cc=responsable%40example\.com&subject=/);
+  assert.match(await tel.locator('.slinks a').getAttribute("href"), /^mailto:/);
+  assert.match(await tel.locator(".slinks").innerText(), /Pas Outlook \? Autre messagerie/);
+  await tel.context().close();
+});

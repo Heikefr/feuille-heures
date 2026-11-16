@@ -9,19 +9,35 @@ import { FT, ficheBlob, ficheObsEnTrop, ficheTaille, ficheURL } from "./fiche.js
 import { render } from "./ecran-rendu.js";
 
 /**
+ * Vrai sur téléphone ou tablette (iPhone, iPad, Android), faux sur PC.
+ * Sert à choisir le lien qui ouvre Outlook : les deux mondes n'utilisent pas le même.
+ * (Un iPad récent se présente comme un Mac : on le reconnaît à son écran tactile.)
+ */
+function surMobile() {
+  var ua = navigator.userAgent || "";
+  return /iPhone|iPad|iPod|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+/**
  * Destinataires, objet et liens d'ouverture de la messagerie.
- * Outlook s'ouvre par un lien « ms-outlook:// » ; les adresses y sont séparées par des points-virgules.
+ *
+ * Deux liens existent, et le bon dépend de l'appareil (corrigé en 1.0.1) :
+ *   - « ms-outlook://compose?… » : lien propre à l'appli Outlook des téléphones. Il ouvre un nouveau message
+ *     sur iPhone ; sur Windows il n'est pas fiable (il ouvre Outlook sans créer de message, ou rien du tout).
+ *   - « mailto:… » : lien standard. Sur PC, Windows le confie à la messagerie par défaut ; si c'est Outlook,
+ *     un nouveau message s'ouvre avec les destinataires et l'objet.
+ * Dans les deux cas les adresses sont séparées par des points-virgules, comme Outlook les attend.
+ *
+ * @returns {{to:string[], cc:string[], subj:string, ol:string, mt:string, mobile:boolean, principal:string, secours:string}}
+ *   principal : lien du bouton « Copier la fiche et ouvrir Outlook » ; secours : l'autre lien, proposé en dessous.
  */
 function sendUrls() {
   var st = S.settings, to = mailList(st.mails.paye), cc = st.mails.ccResp ? mailList(st.mails.resp) : [], subj = subject();
-  return {
-    to,
-    cc,
-    subj,
-    ol: "ms-outlook://compose?to=" + to.map(encodeURIComponent).join(";") + (cc.length ? "&cc=" + cc.map(encodeURIComponent).join(";") : "")
-        + "&subject=" + encodeURIComponent(subj),
-    mt: "mailto:" + to.join(";") + "?subject=" + encodeURIComponent(subj) + (cc.length ? "&cc=" + cc.join(";") : "")
-  };
+  var ol = "ms-outlook://compose?to=" + to.map(encodeURIComponent).join(";") + (cc.length ? "&cc=" + cc.map(encodeURIComponent).join(";") : "")
+      + "&subject=" + encodeURIComponent(subj);
+  var mt = "mailto:" + to.join(";") + "?subject=" + encodeURIComponent(subj) + (cc.length ? "&cc=" + cc.join(";") : "");
+  var mobile = surMobile();
+  return { to, cc, subj, ol, mt, mobile, principal: mobile ? ol : mt, secours: mobile ? mt : ol };
 }
 
 /** L'écran d'envoi (fenêtre sur PC, plein écran sur iPhone). */
@@ -52,14 +68,15 @@ function viewSend() {
   }).join("") + "</div><small>" + Math.round(FT[ficheTaille()][0] * 1e3) + ' px de large</small></div></div><div class="sendr"><div class="slab">Destinataires</div><div class="swhos">'
       + who + '</div><div class="sobj">Objet : <b>' + esc(u.subj) + "</b></div>" + (w.validated ? '<div class="tiny">Envoyée le '
       + esc(w.sentAt || "") + ". La renvoyer ne change rien dans l'appli.</div>" : "") + '<div class="sgrow"></div>' + obsAlerte
-      + (u.to.length ? '<a class="btn primary sgo" href="' + esc(u.ol) + '" data-act="sendgo" data-m="ol">Copier la fiche et ouvrir Outlook</a>'
+      + (u.to.length ? '<a class="btn primary sgo" href="' + esc(u.principal) + '" data-act="sendgo" data-m="ol">Copier la fiche et ouvrir Outlook</a>'
           : '<button class="btn primary sgo" disabled>Copier la fiche et ouvrir Outlook</button>')
       + (S.sendFail ? `<div class="banner warn" style="display:block">La copie automatique n'a pas marché. `
           + (D ? "Fais un clic droit sur la fiche puis « Copier l'image »" : "Fais un appui long sur la fiche puis « Copier »")
-      + ', puis <a class="linkbtn" href="' + esc(u.ol) + '" data-act="sendgo" data-m="nocopy">ouvre Outlook</a>.</div>' : "")
+      + ', puis <a class="linkbtn" href="' + esc(u.principal) + '" data-act="sendgo" data-m="nocopy">ouvre Outlook</a>.</div>' : "")
       + '<ol class="ssteps">' + steps.map(function(x) {
     return "<li>" + x + "</li>";
-  }).join("") + '</ol><div class="slinks">Pas Outlook ? <a class="linkbtn" href="' + esc(u.mt) + '" data-act="sendgo" data-m="mail">Autre messagerie</a> · <button class="linkbtn" data-act="export">Fichier Excel</button></div></div></div></div>';
+  }).join("") + '</ol><div class="slinks">' + (u.mobile ? "Pas Outlook ? " : "Le message ne s'ouvre pas ? ") + '<a class="linkbtn" href="' + esc(u.secours) + '" data-act="sendgo" data-m="mail">'
+      + (u.mobile ? "Autre messagerie" : "Essayer le lien direct Outlook") + '</a> · <button class="linkbtn" data-act="export">Fichier Excel</button></div></div></div></div>';
 }
 
 /**

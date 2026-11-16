@@ -33,7 +33,11 @@ const CLE_DONNEES = "feuille-heures-v1";
  *  - pc     : PC plein écran (≥ 1 280 px : menu de gauche et panneau de droite).
  */
 const ECRANS = {
-  iphone: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  iphone: {
+    viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
+    // L'appli choisit le lien d'ouverture d'Outlook selon l'appareil : le faux iPhone doit donc se présenter comme un iPhone.
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+  },
   etroit: { viewport: { width: 1100, height: 820 }, deviceScaleFactor: 1 },
   pc: { viewport: { width: 1366, height: 820 }, deviceScaleFactor: 1 },
 };
