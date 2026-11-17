@@ -58,6 +58,12 @@ for (const jeu of jeux()) {
     const p = { releves: jeu.releves, recaps: jeu.recaps };
     const [a, b] = await Promise.all([ref.evaluate(sondeCompta, p), app.evaluate(sondeCompta, p)]);
     for (const r of jeu.releves) assert.ok(a.releves[r.nom].length >= 1, `le relevé « ${r.nom} » est reconnu`);
+    // Relevés dont la comparaison a volontairement changé (voir « depuis » dans le jeu de données) :
+    // la lecture du texte doit rester identique à la 0.10, la comparaison est contrôlée à la main plus bas.
+    for (const r of jeu.releves.filter((x) => x.depuis)) {
+      memeRapport(jeu, b.releves[r.nom].map((x) => x.analyse), a.releves[r.nom].map((x) => x.analyse));
+      delete a.releves[r.nom]; delete b.releves[r.nom];
+    }
     for (const r of jeu.recaps) assert.notEqual(a.recaps[r.nom], "non reconnu", `le récapitulatif « ${r.nom} » est reconnu`);
     memeRapport(jeu, b, a);
     await Promise.all([ref.context().close(), app.context().close()]);
@@ -141,5 +147,16 @@ test("règles de calcul : valeurs attendues sur le jeu inventé", async () => {
   const v = await app.evaluate(sondeCompta, { releves: jeu.releves, recaps: [] });
   assert.equal(v.releves["S37 sans écart"][0].comparaison.bad, 0);
   assert.equal(v.releves["S41 avec écart"][0].comparaison.bad, 2);
+  // Poste du matin (1.0.2) : la nuit d'avant 6 h est notée « MHNUI » par la compta, sans détail par jour.
+  const matin = v.releves["S36 matin"][0].comparaison;
+  assert.equal(matin.bad, 0, "aucun écart");
+  const nuitMaj = matin.items.find((x) => x.l === "Majoration de nuit");
+  assert.deepStrictEqual([nuitMaj.a, nuitMaj.b, nuitMaj.ok], ["2:30", "2:30", true]);
+  const parJour = matin.items.filter((x) => / · nuit$/.test(x.l));
+  assert.equal(parJour.length, 5);
+  assert.ok(parJour.every((x) => x.na && x.b === "non détaillé"), "nuit jour par jour : non comparée");
+  assert.ok(!matin.info.some((x) => /MHNUI/.test(x)), "MHNUI n'est plus « non vérifié »");
+  // Et le soir (S37), rien ne change : nuit comparée jour par jour avec les indicateurs I9.
+  assert.ok(v.releves["S37 sans écart"][0].comparaison.items.filter((x) => / · nuit$/.test(x.l)).every((x) => !x.na));
   await app.context().close();
 });

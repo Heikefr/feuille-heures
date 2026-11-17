@@ -79,9 +79,9 @@ function verifCard(k) {
   if (open) {
     h += '<table class="vtab"><tr><th scope="col">Élément</th><th scope="col">Appli</th><th scope="col">Compta</th><th scope="col"><span class="lecteur">Résultat</span></th></tr>'
         + ch.items.map(function(x) {
-      return '<tr class="' + (x.ok ? "" : "bad") + '"><td>' + esc(x.l) + (x.fav ? '<br><small style="font-weight:600">'
+      return '<tr class="' + (x.na ? "na" : x.ok ? "" : "bad") + '"><td>' + esc(x.l) + (x.fav ? '<br><small style="font-weight:600">'
           + (x.fav > 0 ? "en ta faveur" : "en ta défaveur") + "</small>" : "") + "</td><td>" + esc(x.a) + "</td><td>" + esc(x.b)
-          + "</td><td>" + (x.ok ? "✓" : "✗") + "</td></tr>";
+          + "</td><td>" + (x.na ? '<span aria-label="non comparé">–</span>' : x.ok ? "✓" : "✗") + "</td></tr>";
     }).join("") + '</table><div class="tiny" style="padding:6px 10px">Vérifiée le ' + esc(ch.at) + (ch.info.length ? " · non vérifié : "
         + esc(ch.info.join(", ")) : "") + "</div>";
     if (ch.bad) {

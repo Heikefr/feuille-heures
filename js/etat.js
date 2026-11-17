@@ -16,19 +16,21 @@
 import { defaultSettings, keyOf, mondayOf } from "./calculs.js";
 
 /** Numéro de version affiché à l'utilisateur (Réglages › Nouveautés, menu PC). */
-var VERSION = "1.0.1";
+var VERSION = "1.0.2";
 
 /**
  * Numéro de publication. Doit être identique à BUILD dans sw.js (vérifié par les tests) :
  * c'est son changement qui déclenche le bandeau « Nouvelle version prête ».
  */
-var BUILD = "1.0.1";
+var BUILD = "1.0.2";
 
 /**
  * Journal des nouveautés, de la plus récente à la plus ancienne : [version, date, [lignes]].
  * Affiché dans Réglages › Nouveautés.
  */
-var CHANGELOG = [["1.0.1", "16/11/2026", [
+var CHANGELOG = [["1.0.2", "17/11/2026", [
+    "Vérification compta : la nuit des postes du matin (avant 6 h), que la compta note « MHNUI » sans détail par jour, est maintenant reconnue. Plus de faux écarts « en ta défaveur » sur ces semaines"]],
+    ["1.0.1", "16/11/2026", [
     "Sur PC, « Copier la fiche et ouvrir Outlook » ouvre maintenant un nouveau message dans la messagerie par défaut de Windows (Outlook), avec les destinataires et l'objet. Sur iPhone, rien ne change"]],
     ["1.0", "13/11/2026", [
     "L'appli sort de la bêta. Les calculs sont identiques à la minute près, la fiche envoyée est identique, et toutes tes données sont reprises telles quelles",

@@ -8,7 +8,7 @@
  *   I2               présence au-delà de 35 h, récup comprise ; autres I… (I9) : heures de nuit
  *   CP, CGPP         congé · CPSUP, ANC : congé supplémentaire · RHT, REC, RC : récup
  *   JF               férié · MAL : maladie · FOR, FORM : formation
- *   EVP (éléments variables de paye) : PANIE, PEQUI (primes), RMNUI (majoration de nuit),
+ *   EVP (éléments variables de paye) : PANIE, PEQUI (primes), RMNUI et MHNUI (majoration de nuit, voir compareCompta),
  *                    R125, R150 (heures sup majorées, exprimées majoration comprise)
  * Résultats figés par tests/1-calculs.test.js.
  */
@@ -89,6 +89,18 @@ function compareCompta(w, st, P) {
   function eq(a, b, tol) {
     return Math.abs((a || 0) - (b || 0)) <= (tol == null ? 1 : tol);
   }
+  /* Nuit : la compta ne la note pas de la même façon selon l'heure (constaté sur les relevés S41 et S46) :
+       - après 20 h (poste du soir) : indicateur I9 chaque jour + majoration « RMNUI » ;
+       - avant 6 h (poste du matin) : PAS d'indicateur par jour, seulement la majoration « MHNUI ».
+     La majoration de la semaine est donc RMNUI + MHNUI. Et quand aucun jour n'a d'indicateur de nuit alors que la
+     semaine a une majoration, le détail par jour n'existe pas côté compta : ces lignes ne sont pas comparées. */
+  var ev = P.evp, majNuitCompta = (ev.RMNUI || 0) + (ev.MHNUI || 0), indNuitSemaine = 0;
+  P.days.forEach(function(d) {
+    Object.keys(d.ind).forEach(function(k) {
+      if (k !== "I2") indNuitSemaine += d.ind[k];
+    });
+  });
+  var nuitNonDetaillee = !indNuitSemaine && majNuitCompta > 0;
   for (var i = 0; i < 7; i++) {
     var dc = c.days[i], pd = P.days[i] || { act: 0, abs: {}, ind: {} }, dn = DAYN[i] + " " + fmtD(dayDate(P.key, i));
     if (dc.worked || pd.act) items.push({ l: dn + " · travail", a: hm(dc.worked), b: hm(pd.act), ok: eq(dc.worked,
@@ -97,7 +109,8 @@ function compareCompta(w, st, P) {
     Object.keys(pd.ind).forEach(function(k) {
       if (k !== "I2") cn += pd.ind[k];
     });
-    if (dc.night || cn) items.push({ l: dn + " · nuit", a: hm(dc.night), b: hm(cn), ok: eq(dc.night, cn), an: dc.night, bn: cn, s: 1 });
+    if (dc.night && nuitNonDetaillee) items.push({ l: dn + " · nuit", a: hm(dc.night), b: "non détaillé", ok: true, na: true });
+    else if (dc.night || cn) items.push({ l: dn + " · nuit", a: hm(dc.night), b: hm(cn), ok: eq(dc.night, cn), an: dc.night, bn: cn, s: 1 });
     var aA = {}, aB = {};
     if (dc.abs) aA[appCat(dc.abs)] = (aA[appCat(dc.abs)] || 0) + dc.counted;
     if (dc.recupH) aA["Récup"] = (aA["Récup"] || 0) + dc.recupH;
@@ -117,7 +130,7 @@ function compareCompta(w, st, P) {
   // Heures sup : la compta les exprime de deux façons, on compare à celle qui est présente.
   //   I2        = présence au-delà de 35 h, récup et congés posés COMPRIS ;
   //   R125/R150 = heures sup PAYÉES, majoration comprise (R125 = heures × 1,25 ; R150 = heures × 1,5).
-  var hs = c.hs + c.samedi, ev = P.evp, i2 = 0, hasI2 = false;
+  var hs = c.hs + c.samedi, i2 = 0, hasI2 = false;
   P.days.forEach(function(d) {
     if (d.ind.I2 != null) {
       hasI2 = true;
@@ -141,13 +154,13 @@ function compareCompta(w, st, P) {
       || 0), an: c.panier, bn: ev.PANIE || 0, s: 1, w: 1 });
   items.push({ l: "Primes d'équipe", a: String(c.panier), b: String(ev.PEQUI || 0), ok: c.panier === (ev.PEQUI
       || 0), an: c.panier, bn: ev.PEQUI || 0, s: 1, w: 1 });
-  items.push({ l: "Majoration de nuit", a: hm(c.majNuit), b: hm(ev.RMNUI || 0), ok: eq(c.majNuit, ev.RMNUI
-      || 0), an: c.majNuit, bn: ev.RMNUI || 0, s: 1, w: 1 });
+  items.push({ l: "Majoration de nuit", a: hm(c.majNuit), b: hm(majNuitCompta), ok: eq(c.majNuit, majNuitCompta), an: c.majNuit,
+      bn: majNuitCompta, s: 1, w: 1 });
   items.forEach(function(x) {
     if (!x.ok) x.fav = (x.bn - x.an) * x.s > 0 ? 1 : -1;
   });
   Object.keys(ev).forEach(function(k) {
-    if (["R125", "R150", "PANIE", "PEQUI", "RMNUI"].indexOf(k) < 0) info.push(k + " " + ev[k] + (COMPTA_INFO[k] ? " (" + COMPTA_INFO[k] + ")" : ""));
+    if (["R125", "R150", "PANIE", "PEQUI", "RMNUI", "MHNUI"].indexOf(k) < 0) info.push(k + " " + ev[k] + (COMPTA_INFO[k] ? " (" + COMPTA_INFO[k] + ")" : ""));
   });
   P.days.forEach(function(d) {
     Object.keys(d.abs).forEach(function(k) {

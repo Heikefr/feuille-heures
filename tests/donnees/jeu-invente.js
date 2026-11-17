@@ -181,6 +181,28 @@ const releveS41 = [
   "EVP\t", "INDTR 0.25", "",
 ].join("\n");
 
+/** Bloc d'une journée de relevé, poste du matin 5h30 – 12h30 : la compta n'y met AUCUN indicateur de nuit. */
+function jourMatin() { return ["MMP05", "05:30 − 12:30", " ", "G000 07:00", " ", " ", " ", " "].join("\n"); }
+
+/**
+ * Relevé de la semaine 36 (5 matins 5h30–12h30), au format exact d'un vrai relevé de poste du matin (S46 2026) :
+ * la nuit d'avant 6 h n'apparaît que dans les EVP, sous « MHNUI 00:30 » par jour. Doit correspondre sans aucun écart.
+ * Nouveauté 1.0.2 : la 0.10 y voyait 6 faux écarts (elle ne connaissait que RMNUI et les indicateurs I9).
+ */
+const releveS36Matin = [
+  " ", "31/08/2026", "Du\t31/08/2026\tau\t06/09/2026", "",
+  "Type\tLun. 31/08\tMar. 01/09\tMer. 02/09\tJeu. 03/09\tVen. 04/09\tSam. 05/09\tDim. 06/09",
+  "Théorique", "Activités", "Présences", "Absences", "Indicateurs",
+  jourMatin(), jourMatin(), jourMatin(), jourMatin(), jourMatin(), "RH", " ", "RH", " ",
+  "Jours\tLun. 31/08\tMar. 01/09\tMer. 02/09\tJeu. 03/09\tVen. 04/09\tSam. 05/09\tDim. 06/09\t",
+  "Théorique", "35:00\t07:00\t07:00\t07:00\t07:00\t07:00\t00:00\t00:00\t",
+  "Réalisé", "35:00\t07:00\t07:00\t07:00\t07:00\t07:00\t00:00\t00:00\t",
+  "Ecart", "00:00\t00:00\t00:00\t00:00\t00:00\t00:00\t00:00\t00:00\t",
+  "EVP\t",
+  "MHNUI 00:30", "PANIE 1.00", "PEQUI 1.00", "MHNUI 00:30", "PANIE 1.00", "PEQUI 1.00", "MHNUI 00:30", "PANIE 1.00", "PEQUI 1.00",
+  "MHNUI 00:30", "PANIE 1.00", "PEQUI 1.00", "MHNUI 00:30", "PANIE 1.00", "PEQUI 1.00", "",
+].join("\n");
+
 /** Récapitulatif des soldes fictif au 13/11/2026 (chiffres arbitraires : certains correspondent, d'autres non). */
 const recapSoldes = [
   "13/11/2026", "Du\t13/11/2026\tau\t13/11/2026", "Récapitulatif des soldes\t", " \t",
@@ -202,7 +224,8 @@ module.exports = {
   /** Contenu à placer dans le stockage de l'appli (même format qu'une sauvegarde). */
   donnees: { app: "feuille-heures", format: 2, settings, weeks },
   /** Relevés de semaines à coller dans « Vérifier ». */
-  releves: [{ nom: "S37 sans écart", texte: releveS37 }, { nom: "S41 avec écart", texte: releveS41 }],
+  // « depuis » : relevé dont la comparaison a volontairement changé depuis la 0.10 (seule sa lecture est comparée à la 0.10).
+  releves: [{ nom: "S37 sans écart", texte: releveS37 }, { nom: "S41 avec écart", texte: releveS41 }, { nom: "S36 matin", texte: releveS36Matin, depuis: "1.0.2" }],
   /** Récapitulatifs des soldes à coller dans « Vérifier ». */
   recaps: [{ nom: "soldes au 13/11", texte: recapSoldes }],
 };

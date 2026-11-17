@@ -49,7 +49,8 @@ async function verifier(page, texte) { await page.locator("#vtxt").fill(texte); 
  * @returns {{nom:string, gestes:(page:import("playwright").Page, ecran:string)=>Promise<void>}[]}
  */
 function scenarios(jeu) {
-  const releves = jeu.releves.map((r) => r.texte).join("\n");
+  // Seulement les relevés lus de la même façon qu'en 0.10 (voir « depuis » dans le jeu de données).
+  const releves = jeu.releves.filter((r) => !r.depuis).map((r) => r.texte).join("\n");
   const communs = [
     { nom: "annee", gestes: (p) => clic(p, '[data-act="year"]') },
     { nom: "compteurs", gestes: (p) => onglet(p, "bank") },
